@@ -1,0 +1,31 @@
+# Kredensial
+.env
+
+# Data yang diunduh/dihasilkan ulang tiap siklus -- bukan kode sumber,
+# jangan ikut dikirim ke Git. Taksonomi di data/labels/ TETAP dikirim
+# (itu keputusan tim, bukan data mentah).
+data/raw/
+data/panel.csv
+data/snapshot_*.csv
+data/jendela_latih.json
+
+# Model dan keluaran hasil latihan
+artifacts/*.joblib
+artifacts/models/
+artifacts/*.json
+artifacts/*.md
+artifacts/riwayat_skor.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store

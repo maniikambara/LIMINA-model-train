@@ -1,0 +1,59 @@
+name: Perbarui model LIMINA
+
+# Jalan otomatis setiap hari jam 22:00 UTC (05:00 WIB keesokan harinya),
+# dan bisa dipicu manual dari tab Actions ("Run workflow") kapan saja.
+# Ubah jadwal cron di bawah kalau ingin frekuensi mingguan, mis.
+# "0 22 * * 1" untuk setiap Senin saja.
+on:
+  schedule:
+    - cron: "0 22 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  perbarui-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pasang dependensi
+        run: pip install -r requirements.txt
+
+      - name: 01 - Ambil data
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: jupyter nbconvert --to notebook --execute --inplace notebooks/01_ambil_data.ipynb
+
+      - name: 02 - Preprocessing dan normalisasi
+        run: jupyter nbconvert --to notebook --execute --inplace notebooks/02_preprocessing_dan_normalisasi.ipynb
+
+      - name: 03 - Pelatihan model
+        run: jupyter nbconvert --to notebook --execute --inplace notebooks/03_pelatihan_model.ipynb
+
+      - name: 04 - Evaluasi model
+        run: jupyter nbconvert --to notebook --execute --inplace notebooks/04_evaluasi_model.ipynb
+
+      - name: 05 - Penilaian dan artefak
+        run: jupyter nbconvert --to notebook --execute --inplace notebooks/05_penilaian_dan_artefak.ipynb
+
+      - name: Commit artefak yang diperbarui
+        run: |
+          git config user.name "limina-bot"
+          git config user.email "limina-bot@users.noreply.github.com"
+          # -f perlu di sini: keempat berkas ini sengaja masuk .gitignore
+          # supaya pekerjaan lokal tidak menumpuk noise git, tapi bot ini
+          # secara sadar MEMANG bermaksud mengomit salinan terbaru --
+          # riwayat_skor.csv khususnya wajib tersimpan supaya perbandingan
+          # 30 hari di notebook 05 punya sesuatu untuk dibandingkan besok.
+          git add -f artifacts/scores.json artifacts/backtest.json artifacts/ringkasan_evaluasi.md artifacts/riwayat_skor.csv
+          git add notebooks/*.ipynb
+          git diff --staged --quiet || git commit -m "Perbarui model dan skor otomatis ($(date -u +%Y-%m-%d))"
+          git push
