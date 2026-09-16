@@ -127,4 +127,53 @@ def normalisasi_tabel_suspensi(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-__all__ = ["get_client", "download_table", "normalisasi_tabel_suspensi", "UKURAN_HALAMAN"]
+KOLOM_WAJIB_TABEL = {
+    "quarterly_financials": {
+        "symbol", "report_date", "revenue", "earnings", "total_equity",
+        "total_liabilities", "total_assets", "operating_cash_flow",
+    },
+    "daily_transaction": {"symbol", "date", "close", "volume", "market_cap"},
+    # daily_full_universe_close, per docs/rancangan/AMBANG-panduan-api-sectors.md,
+    # HANYA menyediakan close -- volume/market_cap sering kosong di sini, jangan
+    # diwajibkan (lihat catatan batasan limina/raw_ingest.py).
+    "daily_full_universe_close": {"symbol", "date", "close"},
+    "free_float_snapshot": {"symbol", "snapshot_date", "free_float"},
+    "company_overview": {"symbol"},
+}
+
+
+def validasi_kolom_tabel(df: pd.DataFrame, nama_tabel: str) -> None:
+    """
+    Memeriksa apakah satu tabel mentah (sebelum diproses lebih lanjut)
+    punya kolom minimal yang dibutuhkan modul lain (lihat
+    KOLOM_WAJIB_TABEL). Dipanggil notebook 02 untuk kelima tabel selain
+    stock_suspensions (yang punya jalur sendiri, normalisasi_tabel_suspensi,
+    karena nama kolomnya bisa disesuaikan lewat limina/config.py).
+
+    Melempar RuntimeError yang menyebut nama tabel dan kolom yang hilang
+    -- supaya kesalahan skema ketahuan segera setelah data dimuat, bukan
+    menyusul sebagai KeyError yang tidak jelas sumbernya jauh di
+    limina/raw_ingest.py. Tidak melakukan apa pun untuk nama tabel yang
+    tidak dikenal (dilewati, bukan dianggap salah).
+    """
+    kolom_wajib = KOLOM_WAJIB_TABEL.get(nama_tabel)
+    if kolom_wajib is None:
+        return
+    hilang = kolom_wajib - set(df.columns)
+    if hilang:
+        raise RuntimeError(
+            f"Tabel {nama_tabel} tidak punya kolom {sorted(hilang)}. Kolom yang "
+            f"ada: {list(df.columns)}. Periksa nama kolom di Supabase Anda -- "
+            f"kalau memang berbeda dari yang diharapkan, sesuaikan "
+            f"KOLOM_WAJIB_TABEL di limina/supabase_io.py."
+        )
+
+
+__all__ = [
+    "get_client",
+    "download_table",
+    "normalisasi_tabel_suspensi",
+    "KOLOM_WAJIB_TABEL",
+    "validasi_kolom_tabel",
+    "UKURAN_HALAMAN",
+]

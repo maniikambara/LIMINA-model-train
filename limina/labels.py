@@ -101,12 +101,19 @@ def bentuk_label_is_event_90d(
     *,
     taksonomi: dict[str, list[str]] | None = None,
     kolom_alasan: str = "reason",
-    jendela_hari: int = 90,
+    jendela_hari: int = config.JENDELA_LABEL_HARI,
 ) -> pd.DataFrame:
     """
     Untuk setiap baris di df_cakupan (kombinasi symbol x as_of_date),
     menandai is_event_90d = 1 jika ada suspensi kategori C pada symbol
     yang sama dalam jendela_hari setelah as_of_date.
+
+    jendela_hari bawaan dibaca dari config.JENDELA_LABEL_HARI -- SATU
+    tempat yang sama dipakai splits.batas_label_matang() untuk menahan
+    as_of_date supaya labelnya sudah matang. Jangan override jendela_hari
+    di sini tanpa juga mengganti config.JENDELA_LABEL_HARI, atau sebagian
+    baris akan diberi label negatif padahal jendela pengamatannya belum
+    genap lewat (lihat catatan di limina/config.py).
 
     df_suspensi wajib punya kolom: symbol, event_date, kolom_alasan.
     df_cakupan wajib punya kolom: symbol, as_of_date.

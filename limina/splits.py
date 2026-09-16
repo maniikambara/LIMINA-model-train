@@ -17,11 +17,13 @@ Aturan yang tetap mengikat, tidak berubah dari desain awal
 
 Satu aturan tambahan yang penting justru karena sistem ini sekarang hidup
 dan terus berjalan: as_of_date tidak boleh lebih baru dari
-(hari_ini - jendela_label_hari). is_event_90d menengok 90 hari KE DEPAN
-dari as_of_date -- untuk as_of_date yang lebih baru dari itu, kita
-sendiri belum tahu apakah sesuatu akan terjadi dalam 90 hari berikutnya
-(datanya belum "matang"/masih tersensor ke kanan). Memberi label negatif
-pada baris semacam itu akan salah, bukan sekadar tidak presisi.
+(hari_ini - jendela_label_hari). is_event_90d menengok jendela_label_hari
+(config.JENDELA_LABEL_HARI, SATU sumber yang sama dipakai
+labels.bentuk_label_is_event_90d) hari KE DEPAN dari as_of_date -- untuk
+as_of_date yang lebih baru dari itu, kita sendiri belum tahu apakah
+sesuatu akan terjadi dalam jendela itu (datanya belum "matang"/masih
+tersensor ke kanan). Memberi label negatif pada baris semacam itu akan
+salah, bukan sekadar tidak presisi.
 
 Validasi silang acak (KFold dengan shuffle=True) TIDAK PERNAH dipakai di
 proyek ini. Jika ada yang mengusulkannya, tolak dengan alasan: ia
@@ -44,8 +46,9 @@ def batas_label_matang(
 ) -> pd.Timestamp:
     """
     Tanggal PALING BARU yang boleh dipakai sebagai as_of_date supaya
-    is_event_90d-nya sudah "matang" (90 hari ke depannya sudah lewat,
-    jadi labelnya benar-benar sudah bisa diketahui, bukan tersensor).
+    is_event_90d-nya sudah "matang" (jendela_label_hari ke depannya sudah
+    lewat, jadi labelnya benar-benar sudah bisa diketahui, bukan
+    tersensor).
     """
     sekarang = pd.Timestamp(sekarang) if sekarang is not None else pd.Timestamp.now().normalize()
     return sekarang - pd.Timedelta(days=jendela_label_hari)

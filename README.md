@@ -146,17 +146,35 @@ urutan yang paling sering ditemui:
    `contoh_symbol_harga` pada cetakan diagnosa notebook 02 -- kalau satu
    daftar punya akhiran seperti `.JK` dan yang lain tidak, itu sumbernya.
    `tumpang_tindih_quarterly_financials_persen`/`tumpang_tindih_harga_persen`
-   yang jauh di bawah 100 memastikan ini. Seragamkan formatnya di
-   sumbernya (Supabase), atau tambahkan langkah normalisasi di notebook
-   01 seperti `limina/supabase_io.py::normalisasi_tabel_suspensi`
-   menyeragamkan tabel suspensi.
+   yang jauh di bawah 100 memastikan ini. Nama kolom tabel suspensi
+   (`event_date`/`reason` vs nama lain di Supabase Anda) sudah disesuaikan
+   otomatis di notebook 02 sendiri (`limina/supabase_io.py::normalisasi_tabel_suspensi`,
+   idempoten, aman dijalankan berkali-kali) dan kelima tabel lain divalidasi
+   lewat `limina/supabase_io.py::validasi_kolom_tabel` -- kalau simbol
+   masih tidak cocok setelah itu, masalahnya di data sumbernya sendiri,
+   bukan lagi soal nama kolom.
 2. **Riwayat `quarterly_financials`/`daily_transaction` belum cukup
    panjang.** Bandingkan `report_date_min`/`report_date_max` dan
    `harga_date_min`/`harga_date_max` pada cetakan yang sama dengan
    `tanggal_potret` yang dicetak di bagian berikutnya (jendela latih
    bergulir) -- kalau riwayatnya belum mencakup jauh ke belakang, potret
    yang lebih lama dari itu tidak akan pernah lengkap sampai riwayatnya
-   bertambah panjang secara alami dari hari ke hari.
+   bertambah panjang secara alami dari hari ke hari. Memperpendek jendela
+   (`limina/raw_ingest.py::JENDELA_PIT_HARI`/`JENDELA_HARGA_HARI`) TIDAK
+   menyiasati ini kalau peristiwa yang mau dipelajari sudah terjadi
+   sebelum riwayat datanya mulai terekam -- tidak ada ukuran jendela yang
+   membuat tanggal yang lebih lama jatuh sesudah tanggal yang lebih baru.
+
+Kalau `jumlah_symbol_kategori_c_siap_dilatih` pada cetakan diagnosa
+notebook 02 nol, prioritas tertinggi adalah memperluas cakupan
+`quarterly_financials`/`daily_transaction` ke symbol yang justru muncul
+di `symbol_kategori_c_belum_punya_quarterly_financials_contoh` -- itulah
+emiten yang riwayat kondisinya sebelum peristiwa justru paling penting
+dipelajari model, bukan emiten yang sedang dipantau langsung. Kalau
+riwayat penuh per-symbol itu mahal diambil, cakupan yang lebih luas per
+sektor (emiten sesektor dengan yang pernah kena kategori C) adalah
+alternatif yang lebih murah untuk mulai mengenali pola sebelum cakupan
+per-symbol lengkap tersedia.
 
 ## 4. Pembaruan berkala (harian/mingguan)
 

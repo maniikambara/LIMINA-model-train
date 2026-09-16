@@ -42,12 +42,16 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from . import contracts, features as feat, labels, pit, sampling
+from . import config, contracts, features as feat, labels, pit, sampling
 
 BOARD_DEFAULT = "Main"  # lihat catatan batasan di atas modul ini
 JENDELA_PIT_HARI = 30  # sama dengan default pit.titik_potong
-JENDELA_HARGA_HARI = 90  # sama dengan default pit.rentang_harga_valid
-OFFSET_AS_OF_DARI_EVENT_HARI = 45  # titik tengah jendela 90 hari, lihat bangun_baris_positif
+JENDELA_HARGA_HARI = 90  # sama dengan default pit.rentang_harga_valid -- jendela LOOKBACK
+# untuk fitur harga, TIDAK terkait dengan horizon peringatan ke depan; lihat
+# limina/config.py::JENDELA_LABEL_HARI untuk itu.
+OFFSET_AS_OF_DARI_EVENT_HARI = config.JENDELA_LABEL_HARI // 2  # titik tengah jendela
+# label (config.JENDELA_LABEL_HARI), lihat bangun_baris_positif. Ikut berubah
+# otomatis kalau JENDELA_LABEL_HARI diganti -- jangan hardcode ulang di sini.
 
 
 def diagnosa_cakupan_mentah(
@@ -144,6 +148,105 @@ def diagnosa_cakupan_mentah(
         )[:15]
 
     return hasil
+
+
+def symbols_dengan_data_lengkap(df_qf: pd.DataFrame, df_harga: pd.DataFrame) -> list[str]:
+    """
+    Cakupan emiten yang REALISTIS untuk dinilai/dilatih: symbol yang
+    punya baris di quarterly_financials DAN di tabel harga sekaligus.
+
+    Ini SENGAJA bukan union dengan company_overview. company_overview
+    mendaftar seluruh emiten TERCATAT di bursa (satu baris per symbol,
+    lihat modul ini bagian atas), termasuk yang sama sekali belum
+    tersedia di quarterly_financials maupun tabel harga Anda. Memakai
+    union symbols_universe = qf | company_overview | harga membuat
+    symbols_universe jauh lebih besar daripada symbol yang benar-benar
+    bisa dinilai -- setiap symbol tambahan dari company_overview yang
+    tidak ada di qf ATAU tidak ada di harga dijamin data_complete=0
+    untuk SELURUH baris symbol itu (lihat tempel_fitur -> data_complete
+    = data_lengkap_finansial AND data_lengkap_harga), apa pun jendela
+    tanggal yang dipakai. Itu bukan cakupan yang bisa diperbaiki lewat
+    kode; hanya menambah baris kosong yang membuat scores.json/panel
+    kelihatan mencakup lebih banyak emiten daripada yang sebenarnya
+    punya data.
+
+    company_overview tetap dipakai di tempat lain (bangun_peta_sektor,
+    bangun_peta_board) karena board/sector-nya berguna bahkan untuk
+    symbol yang belum lengkap datanya -- fungsi ini HANYA menjawab
+    "symbol mana yang layak masuk symbols_universe untuk membangun
+    panel/potret/skor", bukan "symbol mana yang tercatat di bursa".
+    """
+    symbol_qf = set(df_qf["symbol"]) if len(df_qf) else set()
+    symbol_harga = set(df_harga["symbol"]) if len(df_harga) else set()
+    return sorted(symbol_qf & symbol_harga)
+
+
+def prioritas_backfill_kategori_c(
+    df_suspensi_c: pd.DataFrame,
+    df_qf: pd.DataFrame,
+    df_harga: pd.DataFrame,
+    *,
+    offset_hari: int = OFFSET_AS_OF_DARI_EVENT_HARI,
+    mundur_hari_pit: int = JENDELA_PIT_HARI,
+    jendela_harga_hari: int = JENDELA_HARGA_HARI,
+) -> pd.DataFrame:
+    """
+    Untuk tiap symbol dengan peristiwa kategori C yang BELUM termasuk
+    symbols_dengan_data_lengkap(df_qf, df_harga), hitung tanggal PALING
+    AWAL dari tabel harga yang dibutuhkan supaya peristiwa itu bisa jadi
+    baris POSITIF dengan data_complete=1: as_of_date = event_date -
+    offset_hari (lihat bangun_baris_positif), lalu jendela harga
+    [as_of - mundur_hari_pit - jendela_harga_hari, as_of - mundur_hari_pit]
+    (lihat pit.rentang_harga_valid). "harga_awal_dibutuhkan" adalah ujung
+    KIRI jendela itu -- tanggal tertua yang harus ada di
+    daily_transaction/daily_full_universe_close untuk symbol tsb.
+
+    Dipakai untuk MEMPRIORITASKAN backfill: makin baru event_date-nya,
+    makin baru (makin dekat ke hari ini) harga_awal_dibutuhkan-nya,
+    makin sedikit riwayat harga yang perlu diambil mundur. Diurutkan
+    dari yang paling MURAH dibackfill (harga_awal_dibutuhkan paling
+    baru) ke yang paling mahal.
+
+    Kalau satu symbol punya lebih dari satu peristiwa kategori C,
+    dipakai event_date PALING BARU (yang paling murah dibackfill).
+    Symbol yang sudah masuk symbols_dengan_data_lengkap tidak
+    disertakan -- symbol itu sudah tidak perlu diprioritaskan lagi.
+
+    Catatan: fungsi ini HANYA menghitung syarat cakupan tabel harga.
+    Bahkan setelah backfill, baris itu masih harus lolos
+    batas_label_matang/cutoff_latih (splits.py) untuk benar-benar ikut
+    melatih -- lihat README/notebook 02 bagian 4.
+    """
+    kolom_hasil = [
+        "symbol",
+        "event_date",
+        "sudah_punya_quarterly_financials",
+        "sudah_punya_harga",
+        "harga_awal_dibutuhkan",
+    ]
+    if len(df_suspensi_c) == 0:
+        return pd.DataFrame(columns=kolom_hasil)
+
+    symbol_qf = set(df_qf["symbol"]) if len(df_qf) else set()
+    symbol_harga = set(df_harga["symbol"]) if len(df_harga) else set()
+    sudah_lengkap = set(symbols_dengan_data_lengkap(df_qf, df_harga))
+
+    df = df_suspensi_c.copy()
+    df["event_date"] = pd.to_datetime(df["event_date"])
+    terbaru_per_symbol = df.sort_values("event_date").groupby("symbol", as_index=False).tail(1)
+    terbaru_per_symbol = terbaru_per_symbol[~terbaru_per_symbol["symbol"].isin(sudah_lengkap)]
+
+    if len(terbaru_per_symbol) == 0:
+        return pd.DataFrame(columns=kolom_hasil)
+
+    hasil = terbaru_per_symbol[["symbol", "event_date"]].copy()
+    as_of = hasil["event_date"] - pd.Timedelta(days=offset_hari)
+    titik_potong = as_of - pd.Timedelta(days=mundur_hari_pit)
+    hasil["harga_awal_dibutuhkan"] = titik_potong - pd.Timedelta(days=jendela_harga_hari)
+    hasil["sudah_punya_quarterly_financials"] = hasil["symbol"].isin(symbol_qf)
+    hasil["sudah_punya_harga"] = hasil["symbol"].isin(symbol_harga)
+
+    return hasil[kolom_hasil].sort_values("harga_awal_dibutuhkan", ascending=False).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
@@ -641,6 +744,8 @@ def bangun_panel_latih(
 __all__ = [
     "BOARD_DEFAULT",
     "diagnosa_cakupan_mentah",
+    "symbols_dengan_data_lengkap",
+    "prioritas_backfill_kategori_c",
     "gabungkan_harga",
     "bangun_peta_sektor",
     "bangun_peta_board",

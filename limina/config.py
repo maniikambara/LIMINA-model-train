@@ -91,12 +91,27 @@ KOLOM_ALASAN_SUSPENSI = "reason"
 
 # ---------------------------------------------------------------------------
 # Jendela latih/evaluasi BERGULIR, relatif ke tanggal saat notebook
-# dijalankan (lihat limina/splits.py). 90 hari sama dengan definisi
-# is_event_90d itu sendiri; enam potret berjarak 30 hari meniru rancangan
-# awal proyek (lihat docs/rancangan/AMBANG-peran-model-dan-evaluasi.md
-# bagian 2, Permintaan 2).
+# dijalankan (lihat limina/splits.py). SATU-SATUNYA tempat jendela
+# label/horizon peringatan diatur -- labels.bentuk_label_is_event_90d
+# (jendela_hari, seberapa jauh ke depan suspensi dicari dari as_of_date)
+# dan raw_ingest.OFFSET_AS_OF_DARI_EVENT_HARI (titik tengahnya) sama-sama
+# membaca nilai ini, BUKAN hardcode 90 sendiri-sendiri seperti sebelumnya.
+# Itu sengaja: splits.batas_label_matang() menahan as_of_date supaya tidak
+# lebih baru dari (hari_ini - JENDELA_LABEL_HARI) SUPAYA is_event_90d-nya
+# sudah "matang" -- kalau nilai ini diubah tapi jendela pencarian
+# ke-depan di labels.py tetap beda sendiri, sebagian baris akan diberi
+# label negatif padahal jendela pengamatannya belum genap lewat (label
+# tersensor, bukan sekadar tidak presisi). Ganti nilainya DI SINI SAJA;
+# nilai wajar ada di rentang 30 (peringatan jangka pendek, lebih cepat
+# matang tapi histori harga yang tersedia harus lebih baru) sampai 90
+# hari (horizon awal proyek, lihat
+# docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 2, Permintaan
+# 2) -- di luar rentang itu, tinjau ulang OFFSET_AS_OF_DARI_EVENT_HARI dan
+# taksonomi/precision@K yang diasumsikan mengikutinya. Enam potret
+# berjarak 30 hari (JARAK_POTRET_HARI) meniru rancangan awal proyek dan
+# TIDAK ikut berubah kalau JENDELA_LABEL_HARI diganti.
 # ---------------------------------------------------------------------------
-JENDELA_LABEL_HARI = 90
+JENDELA_LABEL_HARI = 30
 JUMLAH_POTRET_EVALUASI = 6
 JARAK_POTRET_HARI = 30
 
