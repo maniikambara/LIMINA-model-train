@@ -2,31 +2,21 @@
 splits.py -- Pemisahan temporal, dihitung BERGULIR relatif ke hari ini
 =========================================================================
 
-LIMINA berjalan sebagai layanan yang dilatih ulang setiap hari/minggu,
-bukan submisi dengan tanggal potret tetap. Karena itu, cutoff latih dan
-tanggal potret evaluasi TIDAK berupa string tanggal tetap -- keduanya
-dihitung ulang setiap kali notebook 02 dijalankan, relatif terhadap
-tanggal hari itu, lewat hitung_jendela_bergulir() di bawah.
+LIMINA dilatih ulang tiap hari/minggu, bukan submisi bertanggal potret
+tetap -- cutoff_latih dan tanggal_potret dihitung ulang tiap kali
+notebook 02 jalan, relatif ke hari itu (hitung_jendela_bergulir()).
 
-Aturan yang tetap mengikat, tidak berubah dari desain awal
-(docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 4.1):
+Aturan tetap (AMBANG-peran-model-dan-evaluasi.md 4.1): latih = seluruh
+event sebelum cutoff_latih; uji = potret pada beberapa tanggal sebelum
+cutoff_label, dilihat sekali per siklus.
 
-    Latih : seluruh peristiwa dengan event_date sebelum cutoff_latih
-    Uji   : potret evaluasi pada beberapa tanggal SEBELUM cutoff_label,
-            dilihat sekali per siklus latih
+as_of_date tidak boleh lebih baru dari (hari_ini - JENDELA_LABEL_HARI):
+is_event_90d menengok JENDELA_LABEL_HARI hari ke depan (satu sumber yang
+sama dipakai labels.bentuk_label_is_event_90d) -- untuk as_of_date lebih
+baru dari itu labelnya belum "matang"/tersensor ke kanan, memberi label
+negatif pada baris begitu akan salah, bukan sekadar kurang presisi.
 
-Satu aturan tambahan yang penting justru karena sistem ini sekarang hidup
-dan terus berjalan: as_of_date tidak boleh lebih baru dari
-(hari_ini - jendela_label_hari). is_event_90d menengok jendela_label_hari
-(config.JENDELA_LABEL_HARI, SATU sumber yang sama dipakai
-labels.bentuk_label_is_event_90d) hari KE DEPAN dari as_of_date -- untuk
-as_of_date yang lebih baru dari itu, kita sendiri belum tahu apakah
-sesuatu akan terjadi dalam jendela itu (datanya belum "matang"/masih
-tersensor ke kanan). Memberi label negatif pada baris semacam itu akan
-salah, bukan sekadar tidak presisi.
-
-Validasi silang acak (KFold dengan shuffle=True) TIDAK PERNAH dipakai di
-proyek ini. Jika ada yang mengusulkannya, tolak dengan alasan: ia
+Validasi silang acak (KFold shuffle=True) TIDAK PERNAH dipakai -- ia
 mencampur masa depan ke dalam data latih.
 """
 
@@ -98,17 +88,19 @@ def saring_data_lengkap(
     df: pd.DataFrame, *, minimum_baris: int = 20, minimum_positif: int = 2
 ) -> pd.DataFrame:
     """
-    Menyaring baris dengan data_complete == 1 saja, sebelum dipakai
-    melatih model. Baris data_complete == 0 tidak berguna dilatih --
-    seluruh KOLOM_FITUR-nya NaN, diisi median hanya saat SCORING (lihat
-    limina/models.py), bukan nilai yang benar-benar terukur untuk baris
-    itu; melatih model dari baris semacam ini sama saja melatihnya dari
-    nilai yang sama berulang-ulang, tidak menambah informasi apa pun.
+    Saring baris data_complete==1 saja sebelum melatih. Baris
+    data_complete==0 tidak berguna dilatih: KOLOM_FITUR-nya NaN (diisi
+    median hanya saat SCORING, lihat models.py), melatih darinya sama
+    saja mengulang nilai yang sama, tidak menambah informasi.
 
-    Melempar RuntimeError dengan pesan yang menjelaskan kemungkinan
-    penyebab (bukan traceback sklearn yang membingungkan soal "Input X
-    contains NaN") kalau baris yang tersisa setelah disaring terlalu
-    sedikit untuk dilatih, atau kelas positifnya hilang.
+    Catatan: notebook 03 saat ini menyaring data_complete secara inline
+    dan menentukan jalur (supervised/anomali/rule_based) sendiri, tidak
+    memanggil fungsi ini -- fungsi ini tetap tersedia untuk pemakaian ad
+    hoc dan diuji di tests/test_splits.py.
+
+    Melempar RuntimeError dengan penyebab paling umum (bukan traceback
+    sklearn soal "Input X contains NaN") kalau baris tersisa terlalu
+    sedikit atau kelas positifnya hilang.
     """
     sebelum = len(df)
     df_lengkap = df[df["data_complete"] == 1].reset_index(drop=True)
@@ -121,23 +113,18 @@ def saring_data_lengkap(
     positif = int(df_lengkap["is_event_90d"].sum()) if len(df_lengkap) else 0
     if len(df_lengkap) < minimum_baris or positif < minimum_positif:
         raise RuntimeError(
-            f"Data latih yang lengkap (data_complete == 1) terlalu sedikit untuk "
-            f"dilatih: {len(df_lengkap)} baris, {positif} positif, setelah "
-            f"membuang baris yang tidak lengkap.\n\n"
-            f"Dua penyebab paling umum, keduanya bisa diperiksa lewat cetakan "
-            f"raw_ingest.diagnosa_cakupan_mentah di notebook 02:\n"
-            f"  1. Riwayat quarterly_financials/daily_transaction di Supabase "
-            f"Anda belum cukup panjang untuk titik potong yang dibutuhkan -- "
-            f"bandingkan report_date_min/max dan harga_date_min/max dengan "
-            f"tanggal potret yang dipakai siklus ini.\n"
-            f"  2. Format symbol tidak cocok antar tabel (mis. \"BBCA.JK\" di "
-            f"satu tabel, \"BBCA\" di tabel lain) -- bandingkan "
-            f"contoh_symbol_universe, contoh_symbol_quarterly_financials, dan "
-            f"contoh_symbol_harga pada cetakan yang sama; kalau formatnya "
-            f"berbeda, seragamkan sebelum tabel diunduh (atau tambahkan "
-            f"langkah normalisasi di notebook 01, seperti "
-            f"limina/supabase_io.py::normalisasi_tabel_suspensi menyeragamkan "
-            f"tabel suspensi)."
+            f"Data latih lengkap terlalu sedikit untuk dilatih: {len(df_lengkap)} baris, "
+            f"{positif} positif (minimum {minimum_baris} baris, "
+            f"{minimum_positif} positif).\n\n"
+            f"Penyebab paling umum (cek lewat raw_ingest.diagnosa_cakupan_mentah "
+            f"di notebook 02):\n"
+            f"  1. Riwayat quarterly_financials/daily_transaction belum cukup "
+            f"panjang untuk titik potong yang dibutuhkan -- bandingkan "
+            f"report_date_min/max dan harga_date_min/max dengan tanggal potret.\n"
+            f"  2. Format symbol tidak seragam antar tabel (\"BBCA.JK\" vs "
+            f"\"BBCA\") -- bandingkan contoh_symbol_* pada cetakan yang sama; "
+            f"seragamkan sebelum diunduh, atau tambahkan langkah normalisasi "
+            f"seperti supabase_io.py::normalisasi_tabel_suspensi."
         )
     return df_lengkap
 

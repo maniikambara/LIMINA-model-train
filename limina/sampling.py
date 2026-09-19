@@ -2,15 +2,11 @@
 sampling.py -- Pembentukan sampel pembanding
 ================================================
 
-Aturan (docs/rancangan/AMBANG-konsep-dan-rancangan.md bagian 7.6):
-
-Setiap sampel positif dipasangkan dengan tiga sampel negatif yang:
-  - berasal dari jendela waktu yang sama, agar kondisi pasar setara
-  - berada pada papan pencatatan yang sebanding
-  - tidak mengalami peristiwa kategori C dalam 180 hari setelah titik potongnya
-
-Sampel negatif TIDAK BOLEH diambil hanya dari emiten yang masih tercatat
-hari ini, karena itu menimbulkan bias keberlangsungan (survivorship bias).
+Aturan (AMBANG-konsep-dan-rancangan.md 7.6): tiap sampel positif
+dipasangkan 3 sampel negatif dari jendela waktu sama (kondisi pasar
+setara), papan pencatatan sebanding, dan tidak mengalami peristiwa
+kategori C dalam 180 hari setelah titik potongnya. Negatif TIDAK BOLEH
+diambil hanya dari emiten yang masih tercatat hari ini (survivorship bias).
 """
 
 from __future__ import annotations
@@ -32,14 +28,12 @@ def cari_kandidat_negatif(
     jendela_aman_hari: int = JENDELA_AMAN_HARI,
 ) -> pd.DataFrame:
     """
-    Mencari kandidat sampel negatif untuk satu baris positif.
+    Kandidat sampel negatif untuk satu baris positif.
 
-    df_cakupan: seluruh (symbol, as_of_date) yang tersedia, TERMASUK
-        emiten yang sudah delisting, supaya tidak bias keberlangsungan.
-    df_suspensi_c: seluruh peristiwa kategori C yang diketahui, dipakai
-        untuk memastikan kandidat negatif benar-benar aman.
-    baris_positif: satu baris dari panel positif, dipakai sebagai acuan
-        jendela waktu dan papan pencatatan.
+    df_cakupan: seluruh (symbol, as_of_date), TERMASUK emiten delisting
+        (hindari survivorship bias). df_suspensi_c: seluruh peristiwa
+        kategori C, untuk memastikan kandidat benar aman. baris_positif:
+        acuan jendela waktu dan papan pencatatan.
     """
     as_of = pd.Timestamp(baris_positif["as_of_date"])
     board = baris_positif["board"]
@@ -82,12 +76,10 @@ def bentuk_sampel_pembanding(
     seed: int = 42,
 ) -> pd.DataFrame:
     """
-    Untuk seluruh baris di df_positif, mencari `rasio` sampel negatif yang
-    memenuhi syarat dan menggabungkannya jadi satu DataFrame sampel latih
-    berimbang (1 positif : `rasio` negatif).
-
-    Baris yang gagal menemukan cukup kandidat negatif dicatat dan
-    dilaporkan, bukan dipaksakan dengan kandidat yang tidak memenuhi syarat.
+    Untuk tiap baris df_positif, cari `rasio` sampel negatif yang
+    memenuhi syarat, gabungkan jadi sampel latih berimbang (1:`rasio`).
+    Baris yang gagal dapat cukup kandidat dicatat dan dilaporkan, tidak
+    dipaksakan dengan kandidat yang tidak memenuhi syarat.
     """
     rng = np.random.default_rng(seed)
     semua_negatif = []

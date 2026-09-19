@@ -18,7 +18,7 @@ plus fungsi kontribusi indikator untuk Kandidat 1.
 from __future__ import annotations
 
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier, IsolationForest
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.class_weight import compute_sample_weight
@@ -47,6 +47,16 @@ KONFIG_KANDIDAT_2 = dict(
     max_depth=2,
     learning_rate=0.05,
     subsample=0.8,
+    random_state=RANDOM_SEED,
+)
+
+# Kandidat 5: anomali TANPA label (Isolation Forest). Dipakai saat
+# data_complete=1 ada tapi positifnya < 2 (Kandidat 1/2 tidak bisa
+# dilatih) -- lihat splits.saring_data_lengkap.
+KONFIG_KANDIDAT_5 = dict(
+    n_estimators=100,
+    max_samples="auto",
+    contamination="auto",
     random_state=RANDOM_SEED,
 )
 
@@ -134,13 +144,51 @@ def kontribusi_indikator_kandidat_2(model: GradientBoostingClassifier) -> dict:
     return dict(zip(KOLOM_FITUR, (float(v) for v in model.feature_importances_)))
 
 
+def latih_kandidat_5(X_train: pd.DataFrame) -> IsolationForest:
+    """
+    Kandidat 5, anomali tanpa label. TIDAK butuh is_event_90d sama
+    sekali -- mengukur seberapa jauh kondisi emiten dari mayoritas
+    peer-nya, bukan belajar pola suspensi sungguhan (data suspensi tetap
+    tidak dipakai). Selalu sebut ke pengguna sebagai skor keanehan
+    relatif terhadap peer, bukan prediksi risiko suspensi.
+    """
+    X = X_train[KOLOM_FITUR].fillna(X_train[KOLOM_FITUR].median())
+    model = IsolationForest(**KONFIG_KANDIDAT_5)
+    model.fit(X)
+    return model
+
+
+def skor_kandidat_5(model: IsolationForest, df: pd.DataFrame, median_latih: pd.Series) -> pd.Series:
+    """Skor mentah Kandidat 5: makin besar makin anomali (kebalikan decision_function)."""
+    X = df[KOLOM_FITUR].fillna(median_latih)
+    return pd.Series(-model.decision_function(X), index=df.index)
+
+
+def kontribusi_kandidat_5(df_acuan: pd.DataFrame, row: pd.Series) -> dict:
+    """
+    Kandidat 5 tak punya koefisien seperti Kandidat 1. Penjelasannya:
+    z-score tiap indikator row terhadap median/std df_acuan (data latih
+    lengkap yang dipakai melatih Kandidat 5).
+    """
+    median = df_acuan[KOLOM_FITUR].median()
+    std = df_acuan[KOLOM_FITUR].std().replace(0, 1).fillna(1)
+    z = (row[KOLOM_FITUR].astype(float) - median) / std
+    hasil = {nama: float(v) for nama, v in z.items()}
+    hasil["_indikator_dominan"] = max(hasil, key=lambda k: abs(hasil[k]))
+    return hasil
+
+
 __all__ = [
     "KONFIG_KANDIDAT_1",
     "KONFIG_KANDIDAT_2",
+    "KONFIG_KANDIDAT_5",
     "latih_kandidat_1",
     "latih_kandidat_2",
+    "latih_kandidat_5",
     "skor_kandidat_1",
     "skor_kandidat_2",
+    "skor_kandidat_5",
     "kontribusi_indikator",
     "kontribusi_indikator_kandidat_2",
+    "kontribusi_kandidat_5",
 ]

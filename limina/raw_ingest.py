@@ -2,39 +2,27 @@
 raw_ingest.py -- Mengubah tabel mentah Supabase jadi panel/potret LIMINA
 ===========================================================================
 
-Modul ini menjembatani DUA bentuk data:
+Menjembatani dua bentuk data: MENTAH (tabel Supabase apa adanya --
+quarterly_financials per symbol+report_date, daily_transaction per
+symbol+date, daily_full_universe_close sama tapi lebih luas/murah,
+free_float_snapshot per symbol+snapshot_date, company_overview satu
+baris per symbol, stock_suspensions per peristiwa/label) dan KONTRAK
+PANEL (limina/contracts.py KOLOM_WAJIB_PANEL: satu baris per
+symbol+as_of_date, berisi identitas, label, seluruh KOLOM_FITUR).
 
-  MENTAH (apa yang ada di tabel Supabase Anda):
-    quarterly_financials        satu baris per (symbol, report_date)
-    daily_transaction           satu baris per (symbol, date), harga+volume
-    daily_full_universe_close   sama bentuknya, cakupan lebih luas/murah
-    free_float_snapshot         satu baris per (symbol, snapshot_date)
-    company_overview            satu baris per symbol (sector, sub_sector, board)
-    stock_suspensions           satu baris per peristiwa suspensi (label)
+Seluruh fungsi murni terima/kembalikan pandas.DataFrame, TIDAK ADA yang
+memanggil Supabase -- supaya bisa diuji dengan tabel kecil buatan tangan
+(tests/test_raw_ingest.py) dan notebook 01/02 jadi lapisan tipis: unduh,
+panggil fungsi di sini, simpan CSV.
 
-  KONTRAK PANEL (apa yang dibutuhkan limina/contracts.py, lihat
-  KOLOM_WAJIB_PANEL): satu baris per (symbol, as_of_date) berisi identitas,
-  label, dan seluruh KOLOM_FITUR.
-
-Semua fungsi di sini murni menerima/mengembalikan pandas.DataFrame biasa --
-TIDAK ADA satu pun yang memanggil Supabase. Ini sengaja, supaya seluruh
-logika di sini bisa diuji dengan tabel kecil buatan tangan tanpa koneksi
-database (lihat tests/test_raw_ingest.py -- fixture uji, bukan data
-proyek), dan supaya notebook 01/02 tinggal jadi lapisan tipis: unduh
-tabel, panggil fungsi di sini, simpan ke CSV.
-
-Batasan yang diwarisi dari skema mentah (baca sebelum mengubah nilai
-default di bawah):
-
-  - "board" (papan pencatatan) dan "sector" punya sumber utama di tabel
-    company_overview. Kalau tabel itu belum mencakup suatu simbol, board
-    jatuh ke BOARD_DEFAULT (menonaktifkan penyaringan "papan sebanding"
-    di sampling.py untuk simbol itu saja), dan sector jatuh ke pendekatan
-    dari sub_sector snapshot TERBARU di free_float_snapshot (bukan
-    sektor pada as_of_date historisnya).
-  - already_flagged (status Notasi Khusus BEI pada as_of_date) tidak
-    punya sumber data mentah di enam tabel di atas. Diisi 0 untuk semua
-    baris -- lihat README bagian keterbatasan.
+Batasan yang diwarisi dari skema mentah:
+  - "board"/"sector" bersumber utama dari company_overview. Simbol yang
+    belum tercakup: board jatuh ke BOARD_DEFAULT (menonaktifkan filter
+    "papan sebanding" di sampling.py untuk simbol itu saja), sector
+    jatuh ke sub_sector TERBARU di free_float_snapshot (bukan sektor
+    pada as_of_date historisnya).
+  - already_flagged (Notasi Khusus BEI) tidak punya sumber mentah --
+    diisi 0 untuk semua baris (lihat README bagian keterbatasan).
 """
 
 from __future__ import annotations
@@ -46,12 +34,8 @@ from . import config, contracts, features as feat, labels, pit, sampling
 
 BOARD_DEFAULT = "Main"  # lihat catatan batasan di atas modul ini
 JENDELA_PIT_HARI = 30  # sama dengan default pit.titik_potong
-JENDELA_HARGA_HARI = 90  # sama dengan default pit.rentang_harga_valid -- jendela LOOKBACK
-# untuk fitur harga, TIDAK terkait dengan horizon peringatan ke depan; lihat
-# limina/config.py::JENDELA_LABEL_HARI untuk itu.
-OFFSET_AS_OF_DARI_EVENT_HARI = config.JENDELA_LABEL_HARI // 2  # titik tengah jendela
-# label (config.JENDELA_LABEL_HARI), lihat bangun_baris_positif. Ikut berubah
-# otomatis kalau JENDELA_LABEL_HARI diganti -- jangan hardcode ulang di sini.
+JENDELA_HARGA_HARI = 90  # lookback fitur harga, tidak terkait horizon label
+OFFSET_AS_OF_DARI_EVENT_HARI = config.JENDELA_LABEL_HARI // 2  # lihat bangun_baris_positif
 
 
 def diagnosa_cakupan_mentah(
@@ -64,31 +48,24 @@ def diagnosa_cakupan_mentah(
 ) -> dict:
     """
     Ringkasan cepat: seberapa besar symbols_universe tumpang tindih
-    dengan symbol yang benar-benar punya baris di quarterly_financials
-    dan di tabel harga, plus rentang tanggal report_date/date yang
-    tersedia. Dipanggil notebook 02 SEBELUM membangun panel/potret.
+    dengan symbol yang punya baris di quarterly_financials/tabel harga,
+    plus rentang tanggal tersedia. Dipanggil notebook 02 sebelum
+    membangun panel/potret.
 
     Kalau data_complete ternyata 0 untuk hampir semua baris, dua
-    penyebab paling umum langsung kelihatan di sini: format symbol yang
-    tidak cocok antar tabel (mis. "BBCA.JK" di satu tabel, "BBCA" di
-    tabel lain -- lihat contoh_symbol_* di bawah), atau riwayat tanggal
-    yang belum cukup panjang untuk titik potong yang dibutuhkan (lihat
-    *_min/*_max di bawah, bandingkan dengan tanggal potret yang dipakai).
+    penyebab paling umum langsung kelihatan: format symbol tidak cocok
+    antar tabel (contoh_symbol_* di bawah), atau riwayat tanggal belum
+    cukup panjang (bandingkan *_min/*_max dengan tanggal potret).
 
-    Kalau df_suspensi_c diberikan (hasil klasifikasi kategori C dari
-    stock_suspensions, lihat labels.klasifikasi_alasan), diagnosa juga
-    menjawab pertanyaan yang paling menentukan bisa-tidaknya panel latih
-    dibangun sama sekali: dari symbol yang benar-benar punya peristiwa
-    kategori C, berapa yang punya baris di quarterly_financials, dan
-    dari yang punya baris itu, berapa yang riwayat harganya BENAR-BENAR
-    mencakup tanggal peristiwanya (bukan cuma "apakah symbol itu ada di
-    tabel harga", tapi "apakah jendela tanggalnya sampai ke titik yang
-    dibutuhkan"). Kalau jumlah_symbol_kategori_c_siap_dilatih nol, panel
-    latih TIDAK BISA dibangun apa pun kondisi lainnya -- ini bukan
-    sesuatu yang bisa diperbaiki dengan mengubah kode, hanya dengan
-    memperluas cakupan quarterly_financials/daily_transaction Anda,
-    idealnya ke symbol yang justru muncul di
-    symbol_kategori_c_belum_punya_quarterly_financials_contoh.
+    Kalau df_suspensi_c diberikan (hasil klasifikasi kategori C), juga
+    menjawab pertanyaan penentu: dari symbol berperistiwa kategori C,
+    berapa yang punya baris quarterly_financials, dan dari itu berapa
+    yang riwayat harganya BENAR-BENAR mencakup jendela tanggal
+    peristiwanya (bukan sekadar "ada di tabel harga"). Kalau
+    jumlah_symbol_kategori_c_siap_dilatih nol, panel latih TIDAK BISA
+    dibangun -- bukan soal kode, hanya diperbaiki dengan memperluas
+    cakupan quarterly_financials/daily_transaction, idealnya ke symbol
+    di symbol_kategori_c_belum_punya_quarterly_financials_contoh.
     """
     universe = set(symbols_universe)
     symbol_qf = set(df_qf["symbol"]) if len(df_qf) else set()
@@ -152,29 +129,14 @@ def diagnosa_cakupan_mentah(
 
 def symbols_dengan_data_lengkap(df_qf: pd.DataFrame, df_harga: pd.DataFrame) -> list[str]:
     """
-    Cakupan emiten yang REALISTIS untuk dinilai/dilatih: symbol yang
-    punya baris di quarterly_financials DAN di tabel harga sekaligus.
+    Cakupan emiten yang realistis untuk dinilai/dilatih: symbol yang
+    punya baris di quarterly_financials DAN tabel harga sekaligus.
 
-    Ini SENGAJA bukan union dengan company_overview. company_overview
-    mendaftar seluruh emiten TERCATAT di bursa (satu baris per symbol,
-    lihat modul ini bagian atas), termasuk yang sama sekali belum
-    tersedia di quarterly_financials maupun tabel harga Anda. Memakai
-    union symbols_universe = qf | company_overview | harga membuat
-    symbols_universe jauh lebih besar daripada symbol yang benar-benar
-    bisa dinilai -- setiap symbol tambahan dari company_overview yang
-    tidak ada di qf ATAU tidak ada di harga dijamin data_complete=0
-    untuk SELURUH baris symbol itu (lihat tempel_fitur -> data_complete
-    = data_lengkap_finansial AND data_lengkap_harga), apa pun jendela
-    tanggal yang dipakai. Itu bukan cakupan yang bisa diperbaiki lewat
-    kode; hanya menambah baris kosong yang membuat scores.json/panel
-    kelihatan mencakup lebih banyak emiten daripada yang sebenarnya
-    punya data.
-
-    company_overview tetap dipakai di tempat lain (bangun_peta_sektor,
-    bangun_peta_board) karena board/sector-nya berguna bahkan untuk
-    symbol yang belum lengkap datanya -- fungsi ini HANYA menjawab
-    "symbol mana yang layak masuk symbols_universe untuk membangun
-    panel/potret/skor", bukan "symbol mana yang tercatat di bursa".
+    Sengaja BUKAN union dengan company_overview (daftar seluruh emiten
+    tercatat, termasuk yang tidak punya data mentah sama sekali) --
+    symbol tanpa qf/harga selalu data_complete=0, apa pun jendelanya,
+    jadi union hanya menambah baris kosong. company_overview tetap
+    dipakai untuk board/sector (bangun_peta_sektor/bangun_peta_board).
     """
     symbol_qf = set(df_qf["symbol"]) if len(df_qf) else set()
     symbol_harga = set(df_harga["symbol"]) if len(df_harga) else set()
@@ -186,36 +148,24 @@ def prioritas_backfill_kategori_c(
     df_qf: pd.DataFrame,
     df_harga: pd.DataFrame,
     *,
+    cutoff_latih: pd.Timestamp | None = None,
     offset_hari: int = OFFSET_AS_OF_DARI_EVENT_HARI,
     mundur_hari_pit: int = JENDELA_PIT_HARI,
     jendela_harga_hari: int = JENDELA_HARGA_HARI,
 ) -> pd.DataFrame:
     """
-    Untuk tiap symbol dengan peristiwa kategori C yang BELUM termasuk
-    symbols_dengan_data_lengkap(df_qf, df_harga), hitung tanggal PALING
-    AWAL dari tabel harga yang dibutuhkan supaya peristiwa itu bisa jadi
-    baris POSITIF dengan data_complete=1: as_of_date = event_date -
-    offset_hari (lihat bangun_baris_positif), lalu jendela harga
-    [as_of - mundur_hari_pit - jendela_harga_hari, as_of - mundur_hari_pit]
-    (lihat pit.rentang_harga_valid). "harga_awal_dibutuhkan" adalah ujung
-    KIRI jendela itu -- tanggal tertua yang harus ada di
-    daily_transaction/daily_full_universe_close untuk symbol tsb.
+    Untuk tiap symbol kategori C yang belum masuk
+    symbols_dengan_data_lengkap, hitung tanggal harga tertua yang
+    dibutuhkan (harga_awal_dibutuhkan) supaya peristiwanya bisa jadi
+    baris POSITIF data_complete=1 (as_of = event_date - offset_hari,
+    lalu jendela pit.rentang_harga_valid).
 
-    Dipakai untuk MEMPRIORITASKAN backfill: makin baru event_date-nya,
-    makin baru (makin dekat ke hari ini) harga_awal_dibutuhkan-nya,
-    makin sedikit riwayat harga yang perlu diambil mundur. Diurutkan
-    dari yang paling MURAH dibackfill (harga_awal_dibutuhkan paling
-    baru) ke yang paling mahal.
-
-    Kalau satu symbol punya lebih dari satu peristiwa kategori C,
-    dipakai event_date PALING BARU (yang paling murah dibackfill).
-    Symbol yang sudah masuk symbols_dengan_data_lengkap tidak
-    disertakan -- symbol itu sudah tidak perlu diprioritaskan lagi.
-
-    Catatan: fungsi ini HANYA menghitung syarat cakupan tabel harga.
-    Bahkan setelah backfill, baris itu masih harus lolos
-    batas_label_matang/cutoff_latih (splits.py) untuk benar-benar ikut
-    melatih -- lihat README/notebook 02 bagian 4.
+    Kalau cutoff_latih diisi, ditambah kolom cocok_untuk_latih =
+    event_date < cutoff_latih (lihat splits.pisahkan_temporal) --
+    event yang lebih baru dari cutoff hanya masuk potret evaluasi,
+    BUKAN data latih, walau datanya lengkap. Diurutkan: cocok_untuk_latih
+    dulu, lalu yang termurah dibackfill (harga_awal_dibutuhkan paling
+    baru). Satu symbol dengan >1 event ambil event_date paling baru.
     """
     kolom_hasil = [
         "symbol",
@@ -224,6 +174,8 @@ def prioritas_backfill_kategori_c(
         "sudah_punya_harga",
         "harga_awal_dibutuhkan",
     ]
+    if cutoff_latih is not None:
+        kolom_hasil.append("cocok_untuk_latih")
     if len(df_suspensi_c) == 0:
         return pd.DataFrame(columns=kolom_hasil)
 
@@ -246,7 +198,14 @@ def prioritas_backfill_kategori_c(
     hasil["sudah_punya_quarterly_financials"] = hasil["symbol"].isin(symbol_qf)
     hasil["sudah_punya_harga"] = hasil["symbol"].isin(symbol_harga)
 
-    return hasil[kolom_hasil].sort_values("harga_awal_dibutuhkan", ascending=False).reset_index(drop=True)
+    kolom_urut = ["harga_awal_dibutuhkan"]
+    urutan_naik = [False]
+    if cutoff_latih is not None:
+        hasil["cocok_untuk_latih"] = hasil["event_date"] < cutoff_latih
+        kolom_urut = ["cocok_untuk_latih"] + kolom_urut
+        urutan_naik = [False] + urutan_naik
+
+    return hasil[kolom_hasil].sort_values(kolom_urut, ascending=urutan_naik).reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------

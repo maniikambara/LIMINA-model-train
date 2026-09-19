@@ -2,17 +2,11 @@
 labels.py -- Pengelompokan alasan suspensi, pembentukan label
 =================================================================
 
-Definisi (docs/rancangan/AMBANG-konsep-dan-rancangan.md bagian 7.3):
-
-  A. Sukarela atau aksi korporasi   -> dibuang, bukan label positif
-  B. Teknis jangka pendek           -> dibuang dari label utama, disimpan
-                                        sebagai kelompok pembanding
-  C. Kepatuhan atau distress        -> label positif
-
-Hanya kategori C yang menjadi is_event_90d = 1. Pemetaan lengkap alasan
-resmi ke kategori disimpan sebagai berkas terpisah
-(data/labels/taksonomi_alasan_suspensi.json) agar dapat diperiksa siapa
-saja, BUKAN ditulis sebagai dict tersembunyi di kode.
+Definisi (AMBANG-konsep-dan-rancangan.md 7.3): A = sukarela/aksi
+korporasi (dibuang), B = teknis jangka pendek (dibuang dari label utama,
+disimpan sebagai pembanding), C = kepatuhan/distress (label positif).
+Hanya C jadi is_event_90d=1. Pemetaan alasan->kategori ada di
+data/labels/taksonomi_alasan_suspensi.json, bukan dict tersembunyi di kode.
 """
 
 from __future__ import annotations
@@ -26,17 +20,12 @@ from . import config
 
 PATH_TAKSONOMI_DEFAULT = config.PATH_TAKSONOMI
 
-# Taksonomi awal. Kata kunci di bawah DIVALIDASI terhadap 588 baris
-# riwayat suspensi sungguhan (symbol/tanggal/alasan dari tabel
-# stock_suspensions, per 2026-09-11) -- bukan tebakan, tapi TETAP bukan
-# daftar final: sebagian baris ("Suspend more than 6 month") sengaja
-# dibiarkan TIDAK terklasifikasi karena baris itu menyatakan STATUS
-# lanjutan (sudah disuspensi lebih dari 6 bulan), bukan ALASAN awal
-# suspensi -- notebook 02 mencetak jumlah dan contohnya setiap kali
-# dijalankan, dan baris semacam itu wajib ditelusuri manual sebelum
-# diputuskan kategorinya, bukan ditebak lewat kata kunci. Tinjau ulang
-# berkas data/labels/taksonomi_alasan_suspensi.json begitu ada redaksi
-# alasan baru yang belum tercakup kata kuncinya.
+# Divalidasi terhadap 588 baris riwayat suspensi sungguhan (per
+# 2026-09-11) -- bukan tebakan, tapi bukan daftar final. Baris seperti
+# "Suspend more than 6 month" sengaja TIDAK diklasifikasi (itu STATUS
+# lanjutan, bukan alasan awal) -- notebook 02 mencetaknya tiap run untuk
+# ditinjau manual. Perbarui data/labels/taksonomi_alasan_suspensi.json
+# begitu ada redaksi baru yang belum tercakup.
 TAKSONOMI_CONTOH = {
     "A": [
         "permintaan emiten",
@@ -80,12 +69,8 @@ def muat_taksonomi(path: str | Path = PATH_TAKSONOMI_DEFAULT) -> dict[str, list[
 
 
 def klasifikasi_alasan(alasan_resmi: str, taksonomi: dict[str, list[str]]) -> str | None:
-    """
-    Mencocokkan teks alasan resmi suspensi ke salah satu kategori A/B/C
-    lewat pencarian kata kunci. Mengembalikan None jika tidak cocok
-    dengan kata kunci manapun -- kasus ini WAJIB ditinjau manual sebelum
-    dipakai sebagai label, bukan didiamkan atau ditebak.
-    """
+    """Cocokkan alasan resmi ke kategori A/B/C lewat kata kunci. None
+    jika tidak cocok manapun -- wajib ditinjau manual, jangan ditebak."""
     if not alasan_resmi:
         return None
     teks = str(alasan_resmi).lower()
@@ -104,22 +89,16 @@ def bentuk_label_is_event_90d(
     jendela_hari: int = config.JENDELA_LABEL_HARI,
 ) -> pd.DataFrame:
     """
-    Untuk setiap baris di df_cakupan (kombinasi symbol x as_of_date),
-    menandai is_event_90d = 1 jika ada suspensi kategori C pada symbol
-    yang sama dalam jendela_hari setelah as_of_date.
+    Tandai is_event_90d=1 tiap baris df_cakupan (symbol x as_of_date) yang
+    punya suspensi kategori C pada symbol sama dalam jendela_hari setelah
+    as_of_date. jendela_hari bawaan = config.JENDELA_LABEL_HARI, sumber
+    yang sama dipakai splits.batas_label_matang() -- jangan override
+    tanpa mengganti keduanya, atau sebagian baris berlabel negatif
+    padahal jendelanya belum lewat.
 
-    jendela_hari bawaan dibaca dari config.JENDELA_LABEL_HARI -- SATU
-    tempat yang sama dipakai splits.batas_label_matang() untuk menahan
-    as_of_date supaya labelnya sudah matang. Jangan override jendela_hari
-    di sini tanpa juga mengganti config.JENDELA_LABEL_HARI, atau sebagian
-    baris akan diberi label negatif padahal jendela pengamatannya belum
-    genap lewat (lihat catatan di limina/config.py).
-
-    df_suspensi wajib punya kolom: symbol, event_date, kolom_alasan.
-    df_cakupan wajib punya kolom: symbol, as_of_date.
-
-    Mengembalikan df_cakupan dengan kolom tambahan: is_event_90d,
-    event_date, event_category.
+    df_suspensi: kolom symbol, event_date, kolom_alasan.
+    df_cakupan: kolom symbol, as_of_date.
+    Balikan: df_cakupan + is_event_90d, event_date, event_category.
     """
     taksonomi = taksonomi or muat_taksonomi()
 

@@ -2,16 +2,14 @@
 baselines.py -- Tiga pembanding dasar
 ========================================
 
-Dibangun sebelum model apa pun. Tanpa pembanding, angka model tidak
-memiliki arti (docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 4.5).
+Dibangun sebelum model apa pun -- tanpa pembanding, angka model tidak
+punya arti (AMBANG-peran-model-dan-evaluasi.md 4.5).
 
   1. Acak            -- lantai dasar mutlak
   2. Aturan tunggal   -- menguji apakah satu indikator saja sudah cukup
   3. Rule-based       -- pembanding sebenarnya, sekaligus jalur cadangan
-                         jika gerbang 10 September memutuskan begitu
 
-Ini juga Kandidat 3 dan Kandidat 4 pada
-docs/rancangan/AMBA-struktur-model-dan-algoritma.md.
+Kandidat 3 dan 4 pada AMBA-struktur-model-dan-algoritma.md.
 """
 
 from __future__ import annotations
@@ -43,23 +41,41 @@ def skor_acak(df: pd.DataFrame, seed: int = 42) -> pd.Series:
 def skor_aturan_tunggal(df: pd.DataFrame) -> pd.Series:
     """
     Kandidat 3. Bukan model yang dilatih, hanya pengurutan berdasarkan satu
-    indikator: jarak lapor. Kalau kandidat ini saja sudah hampir sekuat
-    model lengkap, itu temuan penting yang layak dilaporkan apa adanya
-    (AMBA-struktur-model-dan-algoritma.md bagian 5).
+    indikator: jarak lapor. Makin besar lapor_jarak_hari (makin telat
+    lapor), makin tinggi skor risikonya -- rank ascending (bukan
+    descending) supaya nilai TERBESAR dapat persentil TERTINGGI, konsisten
+    dengan konvensi skor lain (metrics.precision_at_k mengambil skor
+    tertinggi sebagai top-K risiko).
     """
-    return df["lapor_jarak_hari"].rank(ascending=False, pct=True) * 100
+    return df["lapor_jarak_hari"].rank(pct=True) * 100
 
 
 def skor_rule_based_mentah(row: pd.Series) -> float:
-    """Skor mentah 0 sampai 12 untuk satu baris, sebelum diubah persentil."""
-    skor = 0.0
-    skor += BOBOT_RULE_BASED["lapor_terlambat"] * row["lapor_terlambat"]
-    skor += BOBOT_RULE_BASED["tanpa_pendapatan"] * row["tanpa_pendapatan"]
-    skor += BOBOT_RULE_BASED["ekuitas_negatif"] * row["ekuitas_negatif"]
-    skor += BOBOT_RULE_BASED["ako_negatif_berturut_ge2"] * (row["ako_negatif_berturut"] >= 2)
-    skor += BOBOT_RULE_BASED["hari_tanpa_transaksi_90d_gt20"] * (row["hari_tanpa_transaksi_90d"] > 20)
-    skor += BOBOT_RULE_BASED["utang_terhadap_aset_gt08"] * (row["utang_terhadap_aset"] > 0.8)
-    return skor
+    """
+    Skor mentah 0-12 untuk satu baris. Indikator yang NaN (data_complete=0
+    sebagian) TIDAK diikutkan, bukan mem-NaN-kan seluruh skor -- baris
+    dengan data sebagian tetap dapat skor parsial dari indikator yang ada.
+    """
+    def _kontribusi(nilai, bobot) -> float:
+        return 0.0 if pd.isna(nilai) else bobot * bool(nilai)
+
+    return (
+        _kontribusi(row["lapor_terlambat"], BOBOT_RULE_BASED["lapor_terlambat"])
+        + _kontribusi(row["tanpa_pendapatan"], BOBOT_RULE_BASED["tanpa_pendapatan"])
+        + _kontribusi(row["ekuitas_negatif"], BOBOT_RULE_BASED["ekuitas_negatif"])
+        + _kontribusi(
+            None if pd.isna(row["ako_negatif_berturut"]) else row["ako_negatif_berturut"] >= 2,
+            BOBOT_RULE_BASED["ako_negatif_berturut_ge2"],
+        )
+        + _kontribusi(
+            None if pd.isna(row["hari_tanpa_transaksi_90d"]) else row["hari_tanpa_transaksi_90d"] > 20,
+            BOBOT_RULE_BASED["hari_tanpa_transaksi_90d_gt20"],
+        )
+        + _kontribusi(
+            None if pd.isna(row["utang_terhadap_aset"]) else row["utang_terhadap_aset"] > 0.8,
+            BOBOT_RULE_BASED["utang_terhadap_aset_gt08"],
+        )
+    )
 
 
 def skor_rule_based(df: pd.DataFrame) -> pd.Series:

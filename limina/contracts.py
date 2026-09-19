@@ -2,27 +2,18 @@
 contracts.py -- Skema dataset dan validator
 =============================================
 
-Mendefinisikan kontrak kolom untuk dua bentuk data (lihat
-docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 3):
-
-  - data/panel.csv               satu baris per (emiten, as_of_date)
-  - data/snapshot_<tanggal>.csv    skema sama, seluruh emiten pada satu tanggal
-
-Tidak ada satu pun fungsi di sini yang mengambil data dari Supabase.
-Modul ini murni mendefinisikan bentuk data dan memeriksanya sebelum
-dipakai modul lain.
+Kontrak kolom untuk panel.csv (satu baris per emiten x as_of_date) dan
+snapshot_<tanggal>.csv (skema sama, seluruh emiten satu tanggal). Lihat
+docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 3. Modul ini
+hanya mendefinisikan dan memvalidasi bentuk data, tidak mengambil data.
 """
 
 from __future__ import annotations
 
 import pandas as pd
 
-# ---------------------------------------------------------------------------
-# Kolom indikator turunan (docs/rancangan/AMBA-kamus-variabel.md bagian
-# 3.1-3.3). Ini kolom fitur yang benar-benar masuk ke model. Urutannya
-# dijaga tetap supaya index koefisien model selalu bisa dipetakan balik
-# ke nama indikator.
-# ---------------------------------------------------------------------------
+# Kolom fitur (AMBA-kamus-variabel.md 3.1-3.3). Urutan tetap: index
+# koefisien model harus selalu bisa dipetakan balik ke nama indikator.
 KOLOM_FITUR = [
     "lapor_jarak_hari",
     "lapor_terlambat",
@@ -37,8 +28,8 @@ KOLOM_FITUR = [
     "volatilitas_90d",
 ]
 
-# free_float_rendah sengaja dipisah dari KOLOM_FITUR: hanya boleh dipakai
-# saat scoring live (notebook 05), tidak boleh dipakai saat melatih model.
+# Dipisah dari KOLOM_FITUR: hanya untuk scoring live (notebook 05), tidak
+# untuk melatih (free_float_snapshot biasanya cuma simpan nilai terkini).
 KOLOM_FITUR_LIVE_ONLY = ["free_float_rendah"]
 
 # Kolom identitas dan label, wajib ada di setiap baris panel/potret
@@ -86,13 +77,9 @@ class KontrakError(Exception):
 
 
 def validate_panel(df: pd.DataFrame, *, ketat: bool = True) -> list[str]:
-    """
-    Memeriksa apakah df memenuhi kontrak panel/potret.
-
-    Mengembalikan daftar pesan masalah (kosong berarti lolos). Jika
-    ketat=True, melempar KontrakError begitu ada masalah, sesuai prinsip
-    "data yang gagal dikembalikan ke pemiliknya, bukan diperbaiki diam-diam".
-    """
+    """Cek df terhadap kontrak panel/potret. Balikan: daftar pesan masalah
+    (kosong = lolos). ketat=True melempar KontrakError alih-alih memperbaiki
+    data diam-diam."""
     masalah: list[str] = []
 
     kolom_hilang = [k for k in KOLOM_WAJIB_PANEL if k not in df.columns]
@@ -136,11 +123,8 @@ def validate_panel(df: pd.DataFrame, *, ketat: bool = True) -> list[str]:
 
 
 def is_snapshot_lengkap(df: pd.DataFrame) -> bool:
-    """
-    Potret uji wajib memuat seluruh emiten cakupan, bukan sampel berimbang.
-    Ini pemeriksaan kasar: proporsi positif pada potret harus mendekati
-    kondisi pasar nyata (di bawah ~10 persen), bukan rasio 1:3 hasil sampling.
-    """
+    """Pemeriksaan kasar: potret uji harus proporsi kejadian pasar nyata
+    (<10%), bukan rasio 1:3 hasil sampling seperti panel latih."""
     if "is_event_90d" not in df.columns or len(df) == 0:
         return False
     proporsi_positif = df["is_event_90d"].mean()

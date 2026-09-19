@@ -2,22 +2,19 @@
 supabase_io.py -- Pengambil data dari Supabase (baca saja)
 ==============================================================
 
-Modul ini HANYA membaca (download) data dari tabel yang sudah ada di
-proyek Supabase Anda lewat Data API. Modul ini tidak pernah menjalankan
-DDL, tidak membuat atau mengubah tabel, dan tidak menulis (insert/update/
-upsert/delete) apa pun ke Supabase. Struktur database sepenuhnya milik
-dan dikelola di luar proyek ini.
+HANYA membaca (download) tabel yang sudah ada di proyek Supabase Anda
+lewat Data API -- tidak pernah DDL, tidak membuat/mengubah tabel, tidak
+menulis (insert/update/upsert/delete) apa pun. Struktur database
+sepenuhnya milik dan dikelola di luar proyek ini.
 
 Kredensial dibaca HANYA dari limina.config (yang HANYA membaca dari
-variabel lingkungan SUPABASE_URL/SUPABASE_KEY) -- tidak ada URL atau
-kunci yang ditulis langsung di berkas ini. Ini sengaja: berkas ini akan
-masuk repositori publik, dan menulis kredensial proyek nyata di kode
-adalah risiko keamanan terlepas dari jenis kunci apa pun yang dipakai.
+SUPABASE_URL/SUPABASE_KEY) -- tidak ada kredensial tertulis di berkas
+ini, karena berkas ini bisa masuk repositori publik.
 
 get_client() mengembalikan None (bukan melempar error) kalau kredensial
 belum lengkap atau paket supabase-py belum terpasang, supaya pemanggil
-bisa memeriksa None lebih dulu dan berhenti dengan pesan yang jelas
-(lihat notebook 01), bukan traceback yang membingungkan.
+bisa memeriksa None dan berhenti dengan pesan jelas (notebook 01),
+bukan traceback membingungkan.
 """
 
 from __future__ import annotations
@@ -94,19 +91,16 @@ def download_table(
 
 def normalisasi_tabel_suspensi(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Menyesuaikan nama kolom tabel stock_suspensions MENTAH (apa adanya
-    dari Supabase) ke konvensi internal proyek: "event_date" dan
-    "reason". Sumber kebenaran nama kolom asli ada di satu tempat,
+    Sesuaikan nama kolom tabel stock_suspensions MENTAH ke konvensi
+    internal: "event_date", "reason". Sumber kebenaran nama kolom asli:
     limina/config.py (KOLOM_TANGGAL_SUSPENSI, KOLOM_ALASAN_SUSPENSI) --
-    fungsi ini yang membacanya, supaya logikanya sendiri bisa diuji
-    (lihat tests/test_supabase_io.py), bukan hanya hidup sebagai kode di
-    dalam sel notebook yang gampang lolos dari pengujian.
+    fungsi ini membacanya supaya logikanya sendiri teruji
+    (tests/test_supabase_io.py), bukan hidup dalam sel notebook.
 
-    Melempar RuntimeError dengan pesan yang menyebut nama kolom yang
-    sedang dicari kalau symbol/event_date/reason tetap tidak lengkap
-    setelah penyesuaian -- supaya kesalahan nama kolom ketahuan di sini,
-    bukan menyusul jadi KeyError yang membingungkan jauh di
-    limina/labels.py saat notebook 02 dijalankan.
+    Melempar RuntimeError menyebut nama kolom yang dicari kalau
+    symbol/event_date/reason tetap tidak lengkap setelah penyesuaian --
+    supaya kesalahan nama kolom ketahuan di sini, bukan menyusul jadi
+    KeyError membingungkan di limina/labels.py saat notebook 02 jalan.
     """
     df = df.copy()
     if config.KOLOM_TANGGAL_SUSPENSI != "event_date" and config.KOLOM_TANGGAL_SUSPENSI in df.columns:
@@ -144,17 +138,16 @@ KOLOM_WAJIB_TABEL = {
 
 def validasi_kolom_tabel(df: pd.DataFrame, nama_tabel: str) -> None:
     """
-    Memeriksa apakah satu tabel mentah (sebelum diproses lebih lanjut)
-    punya kolom minimal yang dibutuhkan modul lain (lihat
-    KOLOM_WAJIB_TABEL). Dipanggil notebook 02 untuk kelima tabel selain
-    stock_suspensions (yang punya jalur sendiri, normalisasi_tabel_suspensi,
-    karena nama kolomnya bisa disesuaikan lewat limina/config.py).
+    Cek apakah satu tabel mentah punya kolom minimal yang dibutuhkan
+    modul lain (KOLOM_WAJIB_TABEL). Dipanggil notebook 02 untuk kelima
+    tabel selain stock_suspensions (yang punya jalur sendiri,
+    normalisasi_tabel_suspensi, karena nama kolomnya bisa disesuaikan
+    lewat limina/config.py).
 
-    Melempar RuntimeError yang menyebut nama tabel dan kolom yang hilang
-    -- supaya kesalahan skema ketahuan segera setelah data dimuat, bukan
-    menyusul sebagai KeyError yang tidak jelas sumbernya jauh di
-    limina/raw_ingest.py. Tidak melakukan apa pun untuk nama tabel yang
-    tidak dikenal (dilewati, bukan dianggap salah).
+    Melempar RuntimeError menyebut nama tabel dan kolom yang hilang --
+    supaya kesalahan skema ketahuan segera, bukan menyusul jadi KeyError
+    tidak jelas di limina/raw_ingest.py. Nama tabel tak dikenal dilewati,
+    bukan dianggap salah.
     """
     kolom_wajib = KOLOM_WAJIB_TABEL.get(nama_tabel)
     if kolom_wajib is None:

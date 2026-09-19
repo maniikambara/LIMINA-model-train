@@ -71,15 +71,11 @@ def akurasi_internal_saja(y_true, y_pred) -> float:
 
 def kalibrasi_ambang(skor_latih: np.ndarray, jumlah_top: int = 20, total_cakupan: int | None = None) -> float:
     """
-    Menetapkan ambang skor pada data latih sebagai skor yang setara dengan
-    posisi top-K dari seluruh cakupan (docs/rancangan/AMBANG-peran-model-dan-evaluasi.md
-    bagian 4.4 langkah 1).
-
-    jumlah_top dibatasi (di-min-kan) dengan n: kalau cakupan lebih kecil
-    dari jumlah_top yang diminta (mis. riwayat mingguan yang baru
-    direkonstruksi untuk emiten yang baru masuk cakupan), tanpa batas ini
-    np.percentile menerima argumen persentil negatif dan melempar
-    ValueError, bukan nilai ambang yang masuk akal.
+    Ambang skor pada data latih setara posisi top-K dari seluruh cakupan
+    (AMBANG-peran-model-dan-evaluasi.md 4.4 langkah 1). jumlah_top
+    di-min-kan dengan n: kalau cakupan lebih kecil dari yang diminta,
+    tanpa batas ini np.percentile menerima persentil negatif dan melempar
+    ValueError, bukan ambang yang masuk akal.
     """
     n = total_cakupan or len(skor_latih)
     jumlah_top = min(jumlah_top, n) if n else jumlah_top
@@ -96,22 +92,14 @@ def hitung_selisih_waktu(
     kolom_skor: str = "skor",
 ) -> dict:
     """
-    Implementasi langkah 2-5 docs/rancangan/AMBANG-peran-model-dan-evaluasi.md
-    bagian 4.4.
+    Implementasi langkah 2-5 AMBANG-peran-model-dan-evaluasi.md 4.4.
+    riwayat_skor: panel satu emiten, terurut naik, sampai tanggal
+    peristiwa. Tandai tanggal PERTAMA skor melewati ambang DAN bertahan
+    dua titik berturut-turut (lonjakan sesaat tidak dihitung).
 
-    `riwayat_skor` adalah panel satu emiten, terurut naik berdasarkan
-    tanggal, mencakup periode sebelum peristiwa sampai tanggal peristiwa.
-
-    Aturan: tandai tanggal PERTAMA ketika skor melewati ambang DAN
-    bertahan pada dua titik panel berturut-turut, supaya lonjakan sesaat
-    tidak dihitung sebagai peringatan.
-
-    Mengembalikan dict dengan kunci:
-      - 'terdeteksi' (bool)
-      - 'tanggal_terdeteksi' (Timestamp atau None)
-      - 'selisih_hari' (int atau None)
-    Jika skor tidak pernah melewati ambang, kasus dicatat sebagai
-    kejadian terlewat: 'terdeteksi' bernilai False.
+    Balikan: terdeteksi (bool), tanggal_terdeteksi (Timestamp|None),
+    selisih_hari (int|None). Tidak pernah melewati ambang -> terdeteksi=False
+    (kejadian terlewat).
     """
     riwayat = riwayat_skor.sort_values(kolom_tanggal).reset_index(drop=True)
     melewati = riwayat[kolom_skor] >= ambang
@@ -130,13 +118,9 @@ def hitung_selisih_waktu(
 
 
 def ringkas_selisih_waktu(daftar_hasil: list[dict]) -> dict:
-    """
-    Meringkas keluaran hitung_selisih_waktu untuk banyak emiten menjadi
-    median, p25, p75, dan jumlah kejadian terlewat. Median TIDAK dihitung
-    dari kasus yang terlewat, sesuai peringatan bagian 4.4:
-    "melaporkan rata-rata selisih waktu tanpa menyebutkan jumlah kejadian
-    terlewat adalah penyajian yang menyesatkan".
-    """
+    """Ringkas hitung_selisih_waktu (median/p25/p75 + kejadian terlewat).
+    Median tidak dihitung dari kasus terlewat -- melaporkan rata-rata
+    tanpa jumlah terlewat itu menyesatkan (AMBANG-... 4.4)."""
     terdeteksi = [h["selisih_hari"] for h in daftar_hasil if h["terdeteksi"]]
     kejadian_terlewat = sum(1 for h in daftar_hasil if not h["terdeteksi"])
 

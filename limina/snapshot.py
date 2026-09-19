@@ -2,15 +2,13 @@
 snapshot.py -- Evaluasi potret realistis
 ===========================================
 
-Menjalankan keempat kandidat pada satu potret uji dan menghitung metrik
-yang dilaporkan untuk potret itu (docs/rancangan/AMBA-struktur-model-dan-algoritma.md
-bagian 8, langkah 8-9).
+Menjalankan keempat kandidat pada satu potret uji, menghitung metrik
+yang dilaporkan (AMBA-struktur-model-dan-algoritma.md 8, langkah 8-9).
 
 Potret uji HANYA boleh dilihat satu kali sampai gerbang keputusan
-(docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 5.3). Modul ini
-tidak memaksakan itu secara teknis, hanya menyediakan fungsi untuk
-dipanggil pada saat yang tepat -- notebook 04 yang menjalankannya persis
-sekali per siklus latih.
+(AMBANG-peran-model-dan-evaluasi.md 5.3). Modul ini tidak memaksakan itu
+secara teknis, hanya menyediakan fungsi untuk dipanggil pada saat yang
+tepat -- notebook 04 menjalankannya persis sekali per siklus latih.
 """
 
 from __future__ import annotations
@@ -23,19 +21,17 @@ from .metrics import hitung_auc, precision_at_k, recall_90h
 
 def _kecualikan_data_tidak_lengkap(skor: pd.Series, snapshot: pd.DataFrame) -> pd.Series:
     """
-    Memaksa skor emiten dengan data_complete == 0 turun ke bawah skor
-    TERENDAH yang benar-benar terhitung pada potret ini, supaya tidak
-    pernah masuk top-K pada precision_at_k/recall_90h manapun -- emiten
-    yang fiturnya tidak bisa dihitung sungguhan tidak boleh ikut diberi
-    peringkat seolah "biasa saja" hanya karena nilai kosongnya diisi
-    median (docs/rancangan/AMBA-kamus-variabel.md bagian 4, aturan
-    status). Baris ini TETAP ikut di y_true/recall sebagai peristiwa yang
-    tidak mungkin tertangkap -- bukan dihapus dari potret -- supaya
-    Precision@20/Recall@90h jujur mencerminkan seberapa banyak emiten yang
-    sebetulnya tidak bisa dinilai pada potret ini.
+    Turunkan skor emiten data_complete==0 ke bawah skor TERENDAH yang
+    benar-benar terhitung pada potret ini, supaya tidak pernah masuk
+    top-K -- emiten yang fiturnya tak terhitung tidak boleh diberi
+    peringkat "biasa saja" hanya karena nilai kosongnya diisi median
+    (AMBA-kamus-variabel.md 4). Baris ini TETAP ikut di y_true/recall
+    sebagai peristiwa yang tidak mungkin tertangkap, bukan dihapus,
+    supaya Precision@20/Recall@90h jujur mencerminkan cakupan yang bisa
+    dinilai pada potret ini.
 
-    Sentinel-nya (skor_lengkap.min() - 1) sengaja BUKAN -inf: hitung_auc
-    memanggil sklearn roc_auc_score, yang menolak nilai tak berhingga.
+    Sentinel (skor_lengkap.min() - 1) sengaja bukan -inf: hitung_auc
+    memakai sklearn roc_auc_score, yang menolak nilai tak berhingga.
     """
     if "data_complete" not in snapshot.columns:
         return skor
@@ -128,20 +124,28 @@ def evaluasi_lintas_potret(
     return pd.concat(semua, ignore_index=True)
 
 
+def keputusan_data_tidak_cukup(alasan: str) -> dict:
+    """rule_based_penuh langsung, tanpa evaluasi lintas potret, dipakai
+    saat notebook 03 gagal melatih model apa pun (data terlalu sedikit)."""
+    return {"keputusan": "rule_based_penuh", "alasan": alasan}
+
+
+def keputusan_anomali_saja(alasan: str) -> dict:
+    """anomali_tanpa_label: Kandidat 5 berhasil dilatih (cukup baris
+    lengkap) tapi Kandidat 1/2 tidak (positif < 2)."""
+    return {"keputusan": "anomali_tanpa_label", "alasan": alasan}
+
+
 def gerbang_keputusan(hasil_lintas_potret: pd.DataFrame) -> dict:
     """
-    Eksekusi gerbang keputusan (docs/rancangan/AMBANG-peran-model-dan-evaluasi.md
-    bagian 7, docs/rancangan/AMBA-struktur-model-dan-algoritma.md bagian 2).
-    Awalnya bergantung ke tanggal tetap (10 September 2026, hackathon);
-    sekarang dijalankan ulang tiap siklus latih pada notebook 04, jadi
-    perannya berubah dari sekali gerbang keputusan menjadi pemeriksaan
-    kesehatan model yang berjalan terus.
+    Gerbang keputusan (AMBANG-peran-model-dan-evaluasi.md 7,
+    AMBA-struktur-model-dan-algoritma.md 2). Awalnya untuk tanggal tetap
+    (10 Sep 2026, hackathon); sekarang dijalankan ulang tiap siklus latih
+    di notebook 04, jadi perannya jadi pemeriksaan kesehatan berkelanjutan.
 
-    Aturan:
-      - AUC median regresi_logistik di bawah 0.60          -> rule_based penuh
-      - regresi_logistik TIDAK mengalahkan rule_based pada
-        Precision@20 di mayoritas potret                    -> rule_based mesin utama
-      - selain itu                                          -> jalur machine learning
+    Aturan: AUC median regresi_logistik < 0.60 -> rule_based penuh.
+    regresi_logistik tidak mengalahkan rule_based pada Precision@20 di
+    mayoritas potret -> rule_based mesin utama. Selain itu -> jalur ML.
     """
     auc_lr = hasil_lintas_potret.loc[
         hasil_lintas_potret["kandidat"] == "regresi_logistik", "auc"
@@ -182,4 +186,6 @@ __all__ = [
     "evaluasi_semua_kandidat",
     "evaluasi_lintas_potret",
     "gerbang_keputusan",
+    "keputusan_data_tidak_cukup",
+    "keputusan_anomali_saja",
 ]

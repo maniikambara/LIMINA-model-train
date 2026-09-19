@@ -2,21 +2,15 @@
 model_registry.py -- Penyimpanan model dan penulisan scores.json (orkestrasi)
 ================================================================================
 
-Modul ini BUKAN duplikat limina/artifacts_io.py. artifacts_io.py membangun
-struktur dict sesuai skema dan menulis file JSON secara generik, murni
-fungsi. Modul ini adalah lapisan orkestrasi tingkat proyek dipakai
-notebook 03 dan 05: menyimpan model yang baru dilatih, memuatnya kembali,
-memberi skor ke seluruh pasar dengan model itu, lalu memanggil
+Beda dari artifacts_io.py (fungsi generik: struktur dict + tulis JSON):
+ini lapisan orkestrasi tingkat proyek dipakai notebook 03/05 -- simpan
+model baru, muat kembali, beri skor ke seluruh pasar, panggil
 artifacts_io.py untuk menulis artifacts/scores.json.
 
-simpan_model_terlatih menulis DUA salinan setiap kali dipanggil:
-  - salinan "kanonis" tanpa akhiran tanggal (artifacts/model_kandidat_1.joblib
-    dkk.) -- ini yang dibaca layanan penyajian/scoring, SELALU model
-    terbaru hasil siklus latih paling akhir.
-  - salinan berstempel waktu di artifacts/models/<stempel>/ -- riwayat
-    versi model dari tiap siklus latih, supaya kalau satu siklus retraining
-    menghasilkan model yang tiba-tiba jauh lebih buruk, ada versi
-    sebelumnya untuk dibandingkan atau dikembalikan secara manual.
+simpan_model_terlatih menulis DUA salinan tiap panggilan: kanonis (tanpa
+akhiran tanggal, dibaca layanan scoring, selalu model terbaru) dan
+berstempel waktu di artifacts/models/<stempel>/ (riwayat versi, untuk
+dibandingkan/dikembalikan manual kalau satu siklus retraining memburuk).
 """
 
 from __future__ import annotations
@@ -39,6 +33,8 @@ def _paths(artifacts_dir: Path | str | None) -> dict[str, Path]:
         "scaler": root / "scaler_kandidat_1.joblib",
         "median": root / "median_latih.joblib",
         "model_gb": root / "model_kandidat_2.joblib",
+        "model_iso": root / "model_kandidat_5.joblib",
+        "median_iso": root / "median_latih_kandidat_5.joblib",
         "riwayat": root / "models",
     }
 
@@ -73,11 +69,9 @@ def simpan_model_terlatih(
 def model_tersedia(artifacts_dir: Path | str | None = None) -> bool:
     """
     True kalau model Kandidat 1 (regresi logistik) kanonis sudah pernah
-    disimpan. Dipakai notebook 05 untuk memutuskan antara skor model
-    terlatih atau jalur cadangan rule-based (Kandidat 4, tidak perlu
-    pelatihan) saat notebook 03 belum pernah berhasil menyelesaikan
-    siklus latih -- mis. karena data belum cukup, lihat
-    limina/splits.py::saring_data_lengkap.
+    disimpan. Dipakai notebook 05 untuk memilih Kandidat 1, lalu Kandidat 5
+    (model_kandidat_5_tersedia), lalu Kandidat 4 rule-based sebagai
+    cadangan terakhir -- lihat limina/splits.py::saring_data_lengkap.
     """
     return _paths(artifacts_dir)["model_lr"].exists()
 
@@ -88,6 +82,30 @@ def muat_model_terlatih(artifacts_dir: Path | str | None = None):
     scaler = joblib.load(p["scaler"])
     median_latih = joblib.load(p["median"])
     return model, scaler, median_latih
+
+
+def simpan_model_kandidat_5(model, median_latih: pd.Series, *, artifacts_dir: Path | str | None = None) -> str:
+    """Simpan Kandidat 5 (anomali tanpa label), sama pola dengan simpan_model_terlatih."""
+    p = _paths(artifacts_dir)
+    p["root"].mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, p["model_iso"])
+    joblib.dump(median_latih, p["median_iso"])
+
+    stempel = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%SZ")
+    folder_versi = p["riwayat"] / stempel
+    folder_versi.mkdir(parents=True, exist_ok=True)
+    joblib.dump(model, folder_versi / "model_kandidat_5.joblib")
+    joblib.dump(median_latih, folder_versi / "median_latih_kandidat_5.joblib")
+    return stempel
+
+
+def model_kandidat_5_tersedia(artifacts_dir: Path | str | None = None) -> bool:
+    return _paths(artifacts_dir)["model_iso"].exists()
+
+
+def muat_model_kandidat_5(artifacts_dir: Path | str | None = None):
+    p = _paths(artifacts_dir)
+    return joblib.load(p["model_iso"]), joblib.load(p["median_iso"])
 
 
 def hasilkan_scores_json(
@@ -150,5 +168,8 @@ __all__ = [
     "simpan_model_terlatih",
     "muat_model_terlatih",
     "model_tersedia",
+    "simpan_model_kandidat_5",
+    "muat_model_kandidat_5",
+    "model_kandidat_5_tersedia",
     "hasilkan_scores_json",
 ]

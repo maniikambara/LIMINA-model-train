@@ -179,18 +179,15 @@ def bangun_backtest_json(
 
 def _bersihkan_nan(obj):
     """
-    json.dump menangani float NaN/Infinity secara native -- memancarkan
-    token NaN/Infinity/-Infinity yang TIDAK valid menurut standar JSON
-    (RFC 8259) SEBELUM sempat memanggil default() -- jadi harus
-    dibersihkan di sini dulu, bukan lewat parameter default= saja, atau
-    scores.json/backtest.json yang dihasilkan tidak akan bisa dibaca
-    JSON.parse() di browser.
+    json.dump memancarkan token NaN/Infinity/-Infinity (tidak valid JSON,
+    RFC 8259) SEBELUM sempat memanggil default() -- harus dibersihkan di
+    sini dulu, bukan lewat default= saja, atau scores.json/backtest.json
+    tidak bisa dibaca JSON.parse() di browser.
 
-    pd.NaT diperiksa lewat identitas (obj is pd.NaT), bukan pd.isna(obj)
-    generik: pd.NaT ternyata instance datetime.datetime DAN datetime.date
-    (walau bukan instance pd.Timestamp) -- kalau dibiarkan lolos ke
-    default() di tulis_json, .isoformat()-nya menghasilkan STRING literal
-    "NaT", bukan null.
+    pd.NaT diperiksa lewat identitas (obj is pd.NaT), bukan pd.isna()
+    generik: pd.NaT adalah instance datetime.datetime DAN datetime.date
+    -- kalau lolos ke default() di tulis_json, .isoformat()-nya
+    menghasilkan STRING "NaT", bukan null.
     """
     if isinstance(obj, dict):
         return {k: _bersihkan_nan(v) for k, v in obj.items()}

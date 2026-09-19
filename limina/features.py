@@ -2,14 +2,10 @@
 features.py -- Perhitungan indikator
 =======================================
 
-Setiap fungsi di sini menghitung SATU indikator turunan dari variabel
-mentah, persis rumus di docs/rancangan/AMBA-kamus-variabel.md bagian 3.
-Tidak ada satu pun fungsi yang mengembalikan salinan langsung dari
-variabel mentah tanpa perhitungan.
-
-Seluruh fungsi menerima data mentah dalam bentuk yang sudah dipotong pada
-titik point-in-time yang benar (lihat pit.py). Modul ini tidak melakukan
-pemotongan tanggal sendiri.
+Tiap fungsi menghitung SATU indikator turunan dari variabel mentah,
+rumus persis di AMBA-kamus-variabel.md bagian 3. Data mentah yang masuk
+harus sudah dipotong di titik point-in-time yang benar (lihat pit.py) --
+modul ini tidak memotong tanggal sendiri.
 """
 
 from __future__ import annotations
@@ -31,11 +27,8 @@ def hitung_lapor_jarak_hari(as_of_date: pd.Timestamp, report_date_terakhir: pd.T
 
 
 def hitung_lapor_terlambat(lapor_jarak_hari: int, tenggat_hari: int = 90) -> int:
-    """
-    1 jika lapor_jarak_hari melampaui tenggat wajib. tenggat_hari default
-    90 hari (satu kuartal) sebagai titik awal, wajib diverifikasi terhadap
-    aturan pelaporan resmi BEI (lihat README bagian keterbatasan).
-    """
+    """1 jika lapor_jarak_hari melampaui tenggat_hari (default 90 hari/satu
+    kuartal, wajib diverifikasi terhadap aturan resmi BEI)."""
     return int(lapor_jarak_hari > tenggat_hari)
 
 
@@ -61,11 +54,8 @@ def hitung_utang_terhadap_aset(total_liabilities: float, total_assets: float) ->
 
 
 def hitung_ako_negatif_berturut(operating_cash_flow_berurutan: list[float]) -> int:
-    """
-    Jumlah kuartal berturut-turut operating_cash_flow di bawah nol,
-    dihitung mundur dari kuartal paling akhir dalam
-    operating_cash_flow_berurutan (urutan lama -> baru).
-    """
+    """Jumlah kuartal berturut-turut OCF < 0, mundur dari kuartal
+    terakhir di operating_cash_flow_berurutan (urutan lama->baru)."""
     hitung = 0
     for ocf in reversed(operating_cash_flow_berurutan):
         if ocf < 0:
@@ -123,27 +113,18 @@ def hitung_volatilitas_90d(close_90_hari: pd.Series) -> float:
 # ---------------------------------------------------------------------------
 
 def hitung_free_float_rendah(free_float_persen: float, ambang: float = AMBANG_FREE_FLOAT_RENDAH) -> int:
-    """
-    1 jika free_float di bawah ambang tertentu. HANYA dipakai saat scoring
-    live (notebook 05), TIDAK PERNAH saat melatih model dari sampel
-    historis, karena tabel sumbernya (free_float_snapshot) kemungkinan
-    besar hanya menyediakan nilai terkini, bukan riwayat historis penuh.
-    """
+    """1 jika free_float < ambang. HANYA untuk scoring live (notebook 05),
+    tidak untuk melatih -- free_float_snapshot biasanya cuma simpan nilai
+    terkini, bukan riwayat historis penuh."""
     return int(free_float_persen < ambang)
 
 
 def hitung_seluruh_indikator_dari_baris_mentah(baris_mentah: dict) -> dict:
-    """
-    Fungsi orkestrasi: menerima satu dict variabel mentah untuk satu
-    (symbol, as_of_date) dan mengembalikan seluruh indikator turunan
-    sekaligus.
-
-    baris_mentah wajib berisi kunci:
-      as_of_date, report_date_terakhir, revenue, total_equity,
-      total_liabilities, total_assets, operating_cash_flow_berurutan,
-      volume_90_hari (pd.Series terindeks tanggal),
-      close_90_hari (pd.Series terindeks tanggal)
-    """
+    """Orkestrasi: satu dict variabel mentah (symbol, as_of_date) ->
+    seluruh indikator turunan. Kunci wajib: as_of_date,
+    report_date_terakhir, revenue, total_equity, total_liabilities,
+    total_assets, operating_cash_flow_berurutan, volume_90_hari
+    (pd.Series terindeks tanggal), close_90_hari (idem)."""
     lapor_jarak = hitung_lapor_jarak_hari(
         baris_mentah["as_of_date"], baris_mentah["report_date_terakhir"]
     )

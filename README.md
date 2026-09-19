@@ -98,21 +98,28 @@ Jalankan kelima notebook berurutan, satu kali, dari awal:
    sampel berimbang) dan enam `data/snapshot_<tanggal>.csv` (potret
    evaluasi, proporsi kejadian apa adanya), lalu menyimpan jendela
    latih/uji yang dipakai siklus ini ke `data/jendela_latih.json`.
-3. **03_pelatihan_model** -- melatih regresi logistik (model utama) dan
-   gradient boosting (pembanding), menjalankan empat pemeriksaan
-   kebocoran, menyimpan model ke `artifacts/`.
+3. **03_pelatihan_model** -- memilih salah satu dari tiga jalur tergantung
+   baris `data_complete == 1` yang tersedia: (a) >=20 baris dan >=2 positif
+   -> melatih regresi logistik (model utama) dan gradient boosting
+   (pembanding), menjalankan empat pemeriksaan kebocoran; (b) positif
+   kurang tapi >=5 baris lengkap -> Kandidat 5 (Isolation Forest, anomali
+   tanpa label); (c) selain itu -> rule_based_penuh, tidak ada yang
+   dilatih. Keputusan dicatat ke `artifacts/keputusan.json`.
 4. **04_evaluasi_model** -- Precision@20/Recall@90 hari/AUC lintas enam
    potret, gerbang keputusan (regresi logistik vs. rule-based),
    rekonstruksi selisih waktu deteksi sungguhan, menulis
-   `artifacts/backtest.json` dan `artifacts/ringkasan_evaluasi.md`.
+   `artifacts/backtest.json` dan `artifacts/ringkasan_evaluasi.md`. Seluruh
+   isi notebook ini membandingkan terhadap Kandidat 1 -- kalau notebook 03
+   mengambil jalur (b)/(c) di atas, notebook ini mencetak penjelasan dan
+   melewati evaluasinya (tidak menulis backtest.json siklus itu), bukan
+   gagal dengan galat berkas tidak ditemukan.
 5. **05_penilaian_dan_artefak** -- menilai seluruh cakupan emiten dengan
-   model yang tersimpan, memakai data pasar hari ini, menulis
-   `artifacts/scores.json` -- inilah keluaran yang dibaca dashboard/produk.
-   Kalau notebook 03 belum pernah berhasil menyimpan model (data belum
-   cukup untuk dilatih, lihat bagian 3), notebook ini otomatis memakai
-   Kandidat 4 (rule-based, tidak perlu pelatihan) sebagai skor sementara
-   untuk emiten yang datanya lengkap, dan beralih ke model terlatih
-   dengan sendirinya begitu notebook 03 berhasil.
+   data pasar hari ini, menulis `artifacts/scores.json` -- inilah keluaran
+   yang dibaca dashboard/produk. Memakai kandidat terbaik yang tersedia,
+   berurutan: Kandidat 1 (regresi logistik) -> Kandidat 5 (anomali tanpa
+   label) -> Kandidat 4 (rule-based, tidak perlu pelatihan) -- dan beralih
+   naik ke kandidat yang lebih baik dengan sendirinya begitu notebook 03
+   berhasil melatihnya.
 
 Ini disebut "notebook 01-05" sepanjang dokumen ini karena semua penomoran
 mengikuti urutan file, bukan urutan cell di dalam satu notebook.
@@ -130,51 +137,34 @@ lain (lihat `docs/rancangan/metodologi.md` bagian 9).
 
 ## 3. Kalau notebook 02/03 melapor data tidak lengkap
 
-Setiap potret dan baris panel punya kolom `data_complete`. Notebook 02
-mencetak diagnosa cakupan (bagian "Diagnosa cakupan data mentah" di
-dalam notebooknya) sebelum membangun apa pun, dan mencetak proporsi
-baris lengkap setelah panel selesai dibangun. Notebook 03 menyaring
-baris `data_complete == 0` sebelum melatih (`limina/splits.py::saring_data_lengkap`)
-dan berhenti dengan pesan jelas kalau yang tersisa terlalu sedikit --
-bukan galat sklearn yang membingungkan soal "Input X contains NaN".
+Tiap potret/baris panel punya kolom `data_complete`. Notebook 02
+mencetak diagnosa cakupan sebelum membangun apa pun dan proporsi baris
+lengkap setelahnya. Notebook 03 menyaring `data_complete == 0` sebelum
+melatih dan berhenti dengan pesan jelas kalau sisanya terlalu sedikit,
+bukan galat sklearn membingungkan soal "Input X contains NaN".
 
-Kalau proporsi lengkap rendah atau nol, dua penyebab paling umum, dalam
-urutan yang paling sering ditemui:
+Penyebab paling umum, berurutan:
 
-1. **Format symbol tidak konsisten antar tabel.** Periksa
-   `contoh_symbol_universe`, `contoh_symbol_quarterly_financials`, dan
-   `contoh_symbol_harga` pada cetakan diagnosa notebook 02 -- kalau satu
-   daftar punya akhiran seperti `.JK` dan yang lain tidak, itu sumbernya.
-   `tumpang_tindih_quarterly_financials_persen`/`tumpang_tindih_harga_persen`
-   yang jauh di bawah 100 memastikan ini. Nama kolom tabel suspensi
-   (`event_date`/`reason` vs nama lain di Supabase Anda) sudah disesuaikan
-   otomatis di notebook 02 sendiri (`limina/supabase_io.py::normalisasi_tabel_suspensi`,
-   idempoten, aman dijalankan berkali-kali) dan kelima tabel lain divalidasi
-   lewat `limina/supabase_io.py::validasi_kolom_tabel` -- kalau simbol
-   masih tidak cocok setelah itu, masalahnya di data sumbernya sendiri,
-   bukan lagi soal nama kolom.
+1. **Format symbol tidak konsisten antar tabel.** Cek
+   `contoh_symbol_universe`/`contoh_symbol_quarterly_financials`/
+   `contoh_symbol_harga` di cetakan diagnosa notebook 02 -- kalau satu
+   daftar berakhiran `.JK` dan yang lain tidak, itu sumbernya
+   (`tumpang_tindih_*_persen` jauh di bawah 100 memastikannya). Nama
+   kolom tabel suspensi sudah disesuaikan otomatis
+   (`supabase_io.py::normalisasi_tabel_suspensi`); kelima tabel lain
+   divalidasi lewat `supabase_io.py::validasi_kolom_tabel`.
 2. **Riwayat `quarterly_financials`/`daily_transaction` belum cukup
-   panjang.** Bandingkan `report_date_min`/`report_date_max` dan
-   `harga_date_min`/`harga_date_max` pada cetakan yang sama dengan
-   `tanggal_potret` yang dicetak di bagian berikutnya (jendela latih
-   bergulir) -- kalau riwayatnya belum mencakup jauh ke belakang, potret
-   yang lebih lama dari itu tidak akan pernah lengkap sampai riwayatnya
-   bertambah panjang secara alami dari hari ke hari. Memperpendek jendela
-   (`limina/raw_ingest.py::JENDELA_PIT_HARI`/`JENDELA_HARGA_HARI`) TIDAK
-   menyiasati ini kalau peristiwa yang mau dipelajari sudah terjadi
-   sebelum riwayat datanya mulai terekam -- tidak ada ukuran jendela yang
-   membuat tanggal yang lebih lama jatuh sesudah tanggal yang lebih baru.
+   panjang.** Bandingkan `report_date_min/max` dan `harga_date_min/max`
+   dengan `tanggal_potret` yang dicetak berikutnya -- memperpendek
+   jendela (`JENDELA_PIT_HARI`/`JENDELA_HARGA_HARI`) tidak menyiasati
+   ini kalau peristiwanya sudah terjadi sebelum riwayat mulai terekam.
 
-Kalau `jumlah_symbol_kategori_c_siap_dilatih` pada cetakan diagnosa
-notebook 02 nol, prioritas tertinggi adalah memperluas cakupan
-`quarterly_financials`/`daily_transaction` ke symbol yang justru muncul
-di `symbol_kategori_c_belum_punya_quarterly_financials_contoh` -- itulah
-emiten yang riwayat kondisinya sebelum peristiwa justru paling penting
-dipelajari model, bukan emiten yang sedang dipantau langsung. Kalau
-riwayat penuh per-symbol itu mahal diambil, cakupan yang lebih luas per
-sektor (emiten sesektor dengan yang pernah kena kategori C) adalah
-alternatif yang lebih murah untuk mulai mengenali pola sebelum cakupan
-per-symbol lengkap tersedia.
+Kalau `jumlah_symbol_kategori_c_siap_dilatih` nol, prioritas tertinggi:
+perluas cakupan `quarterly_financials`/`daily_transaction` ke symbol di
+`symbol_kategori_c_belum_punya_quarterly_financials_contoh` -- itulah
+emiten yang riwayatnya paling penting dipelajari model. Kalau mahal
+per-symbol, cakupan per-sektor (emiten sesektor dengan yang pernah kena
+kategori C) adalah alternatif yang lebih murah untuk memulai.
 
 ## 4. Pembaruan berkala (harian/mingguan)
 
@@ -223,15 +213,11 @@ Pastikan `SUPABASE_URL`/`SUPABASE_KEY` diekspor di environment cron
 
 ### Opsi C -- platform hosting dengan cron job terjadwal
 
-Platform yang menyediakan cron job berjadwal untuk menjalankan perintah
-Python (mis. Railway, Render, atau sejenisnya) bisa memakai perintah
-yang sama seperti Opsi B sebagai job terjadwalnya, dengan
-`SUPABASE_URL`/`SUPABASE_KEY` diisi lewat mekanisme environment
-variable/secret milik platform tersebut. Detail antarmuka berbeda-beda
-di tiap platform, jadi tidak dirinci di sini -- yang penting perintah
-di atas persis yang dijalankan tiap siklus, dan folder proyek beserta
-`artifacts/` perlu tetap ada di antara satu run dan run berikutnya
-(untuk versi model dan `riwayat_skor.csv`).
+Platform dengan cron job berjadwal untuk perintah Python (Railway,
+Render, dsb.) bisa memakai perintah yang sama seperti Opsi B, dengan
+`SUPABASE_URL`/`SUPABASE_KEY` diisi lewat environment variable/secret
+platform tersebut. Folder proyek dan `artifacts/` perlu tetap ada antar
+run (untuk versi model dan `riwayat_skor.csv`).
 
 ## 5. Metodologi (ringkas)
 
