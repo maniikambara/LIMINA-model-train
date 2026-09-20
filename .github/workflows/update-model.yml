@@ -48,12 +48,13 @@ jobs:
         run: |
           git config user.name "limina-bot"
           git config user.email "limina-bot@users.noreply.github.com"
-          # -f perlu di sini: keempat berkas ini sengaja masuk .gitignore
-          # supaya pekerjaan lokal tidak menumpuk noise git, tapi bot ini
-          # secara sadar MEMANG bermaksud mengomit salinan terbaru --
-          # riwayat_skor.csv khususnya wajib tersimpan supaya perbandingan
-          # 30 hari di notebook 05 punya sesuatu untuk dibandingkan besok.
-          git add -f artifacts/scores.json artifacts/backtest.json artifacts/ringkasan_evaluasi.md artifacts/riwayat_skor.csv
+          # -f perlu karena keempat berkas ini masuk .gitignore. Dicek satu
+          # per satu dulu -- backtest.json/ringkasan_evaluasi.md hanya ada
+          # kalau Kandidat 1 sudah berhasil dilatih (lihat notebook 04),
+          # jadi belum tentu ada tiap siklus.
+          for berkas in artifacts/scores.json artifacts/backtest.json artifacts/ringkasan_evaluasi.md artifacts/riwayat_skor.csv; do
+            [ -f "$berkas" ] && git add -f "$berkas"
+          done
           git add notebooks/*.ipynb
           git diff --staged --quiet || git commit -m "Perbarui model dan skor otomatis ($(date -u +%Y-%m-%d))"
           git push
