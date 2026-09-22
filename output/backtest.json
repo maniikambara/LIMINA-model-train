@@ -1,16 +1,16 @@
 {
-  "generated_at": "2026-09-22T10:54:46.459015",
-  "model_selected": "Random Forest (class_weight='balanced')",
+  "generated_at": "2026-09-22T12:58:05.858747",
+  "model_selected": "Logistic Regression (Balanced)",
   "metrics": {
-    "auc": 0.6409,
-    "average_precision": 0.2411,
-    "precision": 0.28,
-    "recall": 0.4375,
-    "f1_score": 0.3415,
+    "auc": 0.7602,
+    "average_precision": 0.2897,
+    "precision": 0.2545,
+    "recall": 0.875,
+    "f1_score": 0.3944,
     "precision_at_20": 0.0,
-    "recall_90h": 0.4375,
-    "alarm_palsu": 18,
-    "akurasi_internal_only": 0.7632
+    "recall_90h": 0.875,
+    "alarm_palsu": 41,
+    "akurasi_internal_only": 0.6228
   },
   "comparison_table": [
     {
@@ -24,17 +24,17 @@
     },
     {
       "Model": "Logistic Regression (Balanced)",
-      "ROC-AUC": 0.6910913312693499,
-      "Avg Precision": 0.3324326211761435,
+      "ROC-AUC": 0.7347889107796229,
+      "Avg Precision": 0.28974600322374056,
       "Precision@Top20%": 0.34782608695652173,
-      "Precision": 0.24666666666666667,
-      "Recall": 0.65,
-      "F1-Score": 0.31984486102133164
+      "Precision": 0.22454212454212455,
+      "Recall": 0.8,
+      "F1-Score": 0.3377777777777778
     },
     {
-      "Model": "Random Forest (Balanced)",
-      "ROC-AUC": 0.6483471714044469,
-      "Avg Precision": 0.24106588952872882,
+      "Model": "Random Forest (Balanced Bootstrap)",
+      "ROC-AUC": 0.6683415423585701,
+      "Avg Precision": 0.2722555526135253,
       "Precision@Top20%": 0.30434782608695654,
       "Precision": 0.19494949494949493,
       "Recall": 0.48,

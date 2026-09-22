@@ -118,19 +118,35 @@ emiten berkelas positif kurang dari 2 -- lihat Bagian 4.1 notebook.
 
 1. Logistic Regression baseline (tidak di-tuning, jadi acuan pembanding).
 2. Logistic Regression, `class_weight="balanced"`, di-tuning lewat
-   `GridSearchCV` atas `C`, `penalty`, `solver`.
-3. **Random Forest**, hyperparameter dicari 2 tahap: `RandomizedSearchCV`
-   (60 kombinasi acak atas `n_estimators`, `max_depth`,
-   `min_samples_split`, `min_samples_leaf`, `max_features`, `criterion`,
-   `class_weight`), lalu `GridSearchCV` halus di sekitar hasil terbaiknya
-   -- disetel memakai skor `average_precision` (bukan akurasi; lihat
-   bagian Keterbatasan).
+   `GridSearchCV` atas `C` (termasuk nilai sangat kecil, 0.001-0.03, karena
+   regularisasi kuat cenderung menang pada data sekecil ini), `penalty`
+   (`l2` dan `l1` -- `l1` bisa menekan koefisien fitur lemah ke nol), dan
+   `solver`.
+3. **Random Forest** lewat `BalancedRandomForestClassifier`
+   (`imbalanced-learn`, otomatis jatuh ke `RandomForestClassifier` biasa +
+   `class_weight="balanced"` kalau paket itu belum terpasang) -- tiap pohon
+   dilatih dari bootstrap sample yang sudah diseimbangkan per kelas, bukan
+   cuma pembobotan loss seperti `class_weight` saja. Hyperparameter dicari
+   2 tahap: `RandomizedSearchCV` (60 kombinasi acak atas `n_estimators`,
+   `max_depth`, `min_samples_split`, `min_samples_leaf`, `max_features`,
+   `criterion`, `class_weight`), lalu `GridSearchCV` halus di sekitar hasil
+   terbaiknya -- disetel memakai skor `average_precision` (bukan akurasi;
+   lihat bagian Keterbatasan).
 
-Ketiganya dibandingkan lewat ROC-AUC, Precision, Recall, F1, ROC curve,
-dan confusion matrix, lalu Random Forest hasil tuning dipakai untuk skor
-final dan atribusi `indikator_dominan`/`kontribusi`. Kalau cakupan data
-belum punya minimal 2 emiten berkelas positif, ketiga model di atas
-dilewati dan diganti sementara oleh `SkorAnomaliMahalanobis`
+Ketiganya dibandingkan lewat ROC-AUC, Average Precision, Precision@Top20%,
+Precision/Recall/F1 (ambang 0.5), ROC curve, dan confusion matrix. **Model
+dengan Average Precision CV tertinggi dipilih otomatis** sebagai model
+produksi (`model_terpilih`) yang dipakai Bagian 9 untuk skor final dan
+`scores.json`/`backtest.json` -- ini TIDAK selalu Random Forest; pada
+dataset kecil, Logistic Regression yang diregularisasi kuat sering
+menggeneralisasi lebih baik. Atribusi `indikator_dominan`/`kontribusi`
+dihitung exact dari koefisien model terpilih kalau itu Logistic Regression;
+kalau model terpilih adalah Random Forest, dipakai arah koefisien Logistic
+Regression (Balanced) sebagai proksi penjelas (Random Forest tidak
+punya kontribusi per-baris bertanda yang murah dihitung exact tanpa
+pustaka tambahan seperti SHAP/treeinterpreter). Kalau cakupan data belum
+punya minimal 2 emiten berkelas positif, ketiga model di atas dilewati dan
+diganti sementara oleh `SkorAnomaliMahalanobis`
 (`sectors_fetcher/risk_scorer_fallback.py`) -- model unsupervised berbasis
 jarak Mahalanobis yang tidak butuh label sama sekali, dengan seluruh
 output ditandai eksplisit sebagai belum divalidasi secara statistik.
