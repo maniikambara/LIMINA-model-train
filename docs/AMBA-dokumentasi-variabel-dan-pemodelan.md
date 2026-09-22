@@ -200,21 +200,33 @@ Menangkap reaksi mikrostruktur pasar, aksi buang barang (*dumping*), atau anomal
 Data mentah suspensi berasal dari tabel `stock_suspensions` (591 kejadian di BEI) yang kemudian diklasifikasikan ke dalam 3 taksonomi utama AMBA:
 
 ### 5.1 Taksonomi Suspensi BEI (`event_category`)
-Setiap baris alasan suspensi dianalisis secara semantik ke dalam 3 kategori:
-- **Kategori A (Lonjakan Harga / Cooling Down UMA)**:
+Setiap baris alasan suspensi dianalisis secara semantik ke dalam 3 kategori.
+**Keputusan proyek (per revisi ini): ketiga kategori dihitung sebagai LABEL
+TARGET POSITIF** lewat `event_category.notna()` -- bukan cuma Kategori C.
+Taksonominya sendiri tetap dipertahankan sebagai metadata (`event_category`
+per baris tetap disimpan apa adanya) karena tetap berguna untuk analisis dan
+untuk `indikator_dominan`/pelaporan, hanya saja tidak lagi jadi filter target:
+- **Kategori A (Lonjakan Harga / Cooling Down UMA)** -- *LABEL TARGET POSITIF*:
   - *Ciri Alasan*: "peningkatan harga kumulatif yang signifikan", "cooling down sebagai bentuk perlindungan bagi investor".
   - *Arti*: Suspensi sementara akibat volatilitas kenaikan harga ekstrem, bukan kebangkrutan emiten.
-- **Kategori B (Penurunan Harga Kumulatif)**:
+- **Kategori B (Penurunan Harga Kumulatif)** -- *LABEL TARGET POSITIF*:
   - *Ciri Alasan*: "penurunan harga kumulatif yang signifikan".
   - *Arti*: Suspensi perlindungan akibat aksi jual masif.
-- **Kategori C (Risiko Fundamental / Kepatuhan / Going Concern)** $\to$ **LABEL TARGET POSITIF**:
+- **Kategori C (Risiko Fundamental / Kepatuhan / Going Concern)** -- *LABEL TARGET POSITIF*:
   - *Ciri Alasan*: "Suspend more than 6 month", "Belum menyampaikan laporan keuangan auditan tahunan", "ketidakpastian atas kelangsungan usaha (going concern)", "Belum memenuhi ketentuan V.1.1 peraturan bursa I-A", "keterlambatan pembayaran biaya pencatatan tahunan", "papan pemantauan khusus > 1 tahun", "PKPU", "pailit".
   - *Arti*: Masalah struktural perseroan yang berpotensi memicu delisting atau kerugian permanen investor.
+
+> Catatan: versi sebelumnya dokumen ini membatasi target ke Kategori C saja
+> (argumennya: A/B murni volatilitas harga, bukan sinyal fundamental). Itu
+> tetap argumen yang valid secara konseptual, tapi keputusan proyek saat ini
+> memakai definisi yang lebih luas (A/B/C) -- lihat riwayat commit kalau
+> perlu meninjau ulang alasan pembatasannya.
 
 ### 5.2 Kolom Target Label
 | Nama Kolom | Tipe Data | Definisi & Cara Perolehan |
 |---|---|---|
-| `is_event_90d` | Biner (`0` atau `1`) | **Label Target Utama**. Bernilai `1` jika emiten mengalami suspensi **Kategori C** dalam interval waktu 90 hari setelah titik potong: $(as\_of\_date, as\_of\_date + 90\text{ hari}]$. |
+| `event_category.notna()` | Biner (`0` atau `1`), turunan | **Label Target Utama** dipakai `modeling_and_evaluation.ipynb`. Bernilai `1` jika emiten mengalami suspensi Kategori A, B, **atau** C dalam interval waktu 90 hari setelah titik potong: $(as\_of\_date, as\_of\_date + 90\text{ hari}]$ -- yaitu baris mana pun dengan `event_category` terisi (bukan `null`). |
+| `is_event_90d` | Biner (`0` atau `1`) | Kolom turunan yang lebih sempit, cuma bernilai `1` untuk suspensi **Kategori C** di jendela yang sama. Tetap disimpan di dataset untuk siapa pun yang ingin kembali ke definisi target Kategori C-saja, tapi TIDAK dipakai sebagai `y` di `modeling_and_evaluation.ipynb` saat ini. |
 | `event_date` | Tanggal (`YYYY-MM-DD`) | Tanggal resmi di mana suspensi tersebut terjadi (jika ada). |
 | `event_category` | Teks (`A`, `B`, `C`, atau `null`) | Kategori taksonomi suspensi terdekat yang dialami emiten. |
 

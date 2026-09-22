@@ -87,6 +87,13 @@ def require_supabase_credentials() -> tuple[str, str]:
     return SUPABASE_URL, SUPABASE_KEY
 
 
+def kredensial_lengkap() -> bool:
+    """True kalau SUPABASE_URL dan SUPABASE_KEY berdua sudah terisi. Dipakai
+    01_ambil_data.ipynb (baca) -- beda dari require_supabase_credentials()
+    yang melempar error, ini murni pemeriksaan untuk pesan notebook sendiri."""
+    return bool(SUPABASE_URL) and bool(SUPABASE_KEY)
+
+
 # ----------------------------------------------------------------------
 # 2. BASE URL & ENDPOINT PATHS
 # ----------------------------------------------------------------------
@@ -127,13 +134,15 @@ MAX_DAILY_RANGE_DAYS = 90
 # ----------------------------------------------------------------------
 DEFAULT_TICKERS = [
     "UDNG.JK",
-    "PACK.JK", "MDIA.JK", "LUCY.JK", "MLPT.JK", "INET.JK", "MINA.JK"
-    # # Emiten awal (jangan dihapus)
-    # "BBCA", "TLKM", "ASII",
-    # # Top Market Gainers on IDX, 7 Days
-    # "AMMN", "IMPC", "AADI", "MGLV", "SOHO",
-    # # Top Market Losers on IDX, 7 Days (BBCA sudah ada di atas, tidak diulang)
-    # "BELI", "SRAJ", "BRPT", "TPIA",
+    "PACK.JK", "MDIA.JK", "LUCY.JK", "MLPT.JK", "INET.JK", "MINA.JK",
+    # Emiten awal (jangan dihapus) -- dikembalikan aktif: ini yang bikin
+    # modeling_and_evaluation_old.ipynb punya sampel positif (lihat diagnosa),
+    # watchlist 7-simbol di atas saja nyaris tidak pernah kena suspensi.
+    "BBCA.JK", "TLKM.JK", "ASII.JK",
+    # Top Market Gainers on IDX, 7 Days
+    "AMMN.JK", "IMPC.JK", "AADI.JK", "MGLV.JK", "SOHO.JK",
+    # Top Market Losers on IDX, 7 Days (BBCA sudah ada di atas, tidak diulang)
+    "BELI.JK", "SRAJ.JK", "BRPT.JK", "TPIA.JK",
 ]
 DEFAULT_END_DATE = date.today()
 DEFAULT_START_DATE = DEFAULT_END_DATE - timedelta(days=90)
@@ -165,6 +174,20 @@ SUPABASE_TABLES = {
 
 # Ukuran batch untuk upsert (Supabase/PostgREST punya batas payload per request)
 SUPABASE_UPSERT_BATCH_SIZE = 500
+
+# Cache lokal enam tabel mentah (dibaca-tulis oleh
+# 01_ambil_data.ipynb::supabase_io.py, baca-saja) supaya notebook EDA tidak
+# perlu koneksi Supabase langsung tiap kali dijalankan ulang.
+ROOT_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT_DIR / "data"
+RAW_DIR = DATA_DIR / "raw"
+
+# Nama kolom tanggal/alasan suspensi sungguhan di tabel Supabase Anda.
+# Konvensi internal proyek selalu memakai "event_date"/"reason";
+# 01_ambil_data.ipynb menyamakan nama kolom sumber ke situ sekali, lewat
+# supabase_io.py::normalisasi_tabel_suspensi, tepat setelah diunduh.
+KOLOM_TANGGAL_SUSPENSI = "suspension_date"
+KOLOM_ALASAN_SUSPENSI = "reason"
 
 # ----------------------------------------------------------------------
 # 6. PARAMETER PERHITUNGAN INDIKATOR TURUNAN (section 3 skema)

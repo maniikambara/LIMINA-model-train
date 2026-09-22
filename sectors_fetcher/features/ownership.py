@@ -42,5 +42,8 @@ def compute_ownership_features(free_float_row: pd.Series | None) -> dict[str, An
         return {"free_float_rendah": None}
 
     free_float = float(free_float_row["free_float"])
-    free_float_rendah = int(free_float < config.FREE_FLOAT_RENDAH_AMBANG_PERSEN)
+    # free_float dari API adalah pecahan 0-1 (0.045 = 4.5%); ambang di
+    # config disimpan dalam persen (7.5) -- wajib dibagi 100 sebelum
+    # dibandingkan, atau hasilnya akan selalu 1 (bug lama di modul ini).
+    free_float_rendah = int(free_float < (config.FREE_FLOAT_RENDAH_AMBANG_PERSEN / 100.0))
     return {"free_float_rendah": free_float_rendah}

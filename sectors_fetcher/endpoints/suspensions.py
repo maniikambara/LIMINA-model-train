@@ -7,10 +7,10 @@ Section 1 skema (Identitas dan Label): sumber untuk `event_date`,
 
 Sumber: Sectors API v2 GET /v2/suspensions/
 Field mentah yang dikembalikan API (per baris):
-    symbol, suspension_date, reason, pdf_url
+    symbol, event_date, reason, pdf_url
 
 PENTING soal kepemilikan (lihat AMBA Kamus Variabel bagian 9):
-    Modul ini HANYA menarik data mentah suspensi (symbol, suspension_date,
+    Modul ini HANYA menarik data mentah suspensi (symbol, event_date,
     reason, pdf_url) apa adanya dari API. Modul ini TIDAK melakukan
     klasifikasi taksonomi A/B/C, dan TIDAK menghitung `is_event_90d`.
     Kedua hal itu logika bisnis milik peran Data dan Label, dibangun di atas
@@ -46,14 +46,14 @@ def fetch_suspensions(
     symbol : str | None
         Filter opsional ke satu emiten, misalnya "BBCA". None = semua emiten.
     start, end : date | None
-        Filter opsional rentang tanggal `suspension_date`. `end` tidak boleh
+        Filter opsional rentang tanggal `event_date`. `end` tidak boleh
         di masa depan (API mengembalikan 400 kalau dilanggar).
 
     Returns
     -------
     list[dict]
         Satu dict per kejadian suspensi:
-        {symbol, suspension_date, reason, pdf_url}
+        {symbol, event_date, reason, pdf_url}
     """
     url = config.ENDPOINTS["suspensions"]
     base_params: dict[str, Any] = {}

@@ -28,7 +28,6 @@ import numpy as np
 import pandas as pd
 
 from . import config
-from .storage.supabase_client import SupabaseStorage
 
 logger = logging.getLogger("amba_service")
 
@@ -197,8 +196,8 @@ def preprocess_single_ticker(
     # 5. Kontrol Status & Audit Kebocoran
     already_flagged = 0
     if df_sus is not None and not df_sus.empty:
-        prior_sus = df_sus[(df_sus["symbol"] == sym) & (pd.to_datetime(df_sus["suspension_date"]) <= as_of_dt)]
-        if not prior_sus.empty and (board == "Watchlist" or (as_of_dt - pd.to_datetime(prior_sus["suspension_date"].max())).days <= 180):
+        prior_sus = df_sus[(df_sus["symbol"] == sym) & (pd.to_datetime(df_sus["event_date"]) <= as_of_dt)]
+        if not prior_sus.empty and (board == "Watchlist" or (as_of_dt - pd.to_datetime(prior_sus["event_date"].max())).days <= 180):
             already_flagged = 1
     if board == "Watchlist":
         already_flagged = 1
@@ -246,11 +245,28 @@ class AMBAScoringService:
         model_path: str = DEFAULT_MODEL_PATH,
         lr_model_path: str = DEFAULT_LR_PATH,
     ):
-        self.storage = storage or SupabaseStorage()
+        self.storage = storage or self._default_storage()
         self.model_path = model_path
         self.lr_model_path = lr_model_path
         self._rf_model: Any = None
         self._lr_pipeline: Any = None
+
+    @staticmethod
+    def _default_storage() -> SupabaseStorage:
+        """Import SupabaseStorage hanya saat benar dibutuhkan (bukan saat
+        modul ini di-import) -- sectors_fetcher/storage/ belum ada di
+        checkout ini. Beri RuntimeError yang jelas di sini, bukan biarkan
+        ModuleNotFoundError membingungkan menyusul saat `import sectors_fetcher`."""
+        try:
+            from .storage.supabase_client import SupabaseStorage as _Storage
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "AMBAScoringService butuh koneksi Supabase tapi "
+                "sectors_fetcher/storage/ tidak ada di checkout ini. "
+                "Sediakan instance storage sendiri lewat parameter `storage=`, "
+                "atau lengkapi paket storage/ terlebih dahulu."
+            ) from exc
+        return _Storage()
 
     def _ensure_models_loaded(self) -> None:
         """Lazy load model ML."""

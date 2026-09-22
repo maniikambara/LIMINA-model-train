@@ -1,0 +1,44 @@
+{
+  "generated_at": "2026-09-22T10:54:46.459015",
+  "model_selected": "Random Forest (class_weight='balanced')",
+  "metrics": {
+    "auc": 0.6409,
+    "average_precision": 0.2411,
+    "precision": 0.28,
+    "recall": 0.4375,
+    "f1_score": 0.3415,
+    "precision_at_20": 0.0,
+    "recall_90h": 0.4375,
+    "alarm_palsu": 18,
+    "akurasi_internal_only": 0.7632
+  },
+  "comparison_table": [
+    {
+      "Model": "Baseline Logistic Regression",
+      "ROC-AUC": 0.572099634112018,
+      "Avg Precision": 0.2627977252185386,
+      "Precision@Top20%": 0.391304347826087,
+      "Precision": 0.2,
+      "Recall": 0.04,
+      "F1-Score": 0.06666666666666667
+    },
+    {
+      "Model": "Logistic Regression (Balanced)",
+      "ROC-AUC": 0.6910913312693499,
+      "Avg Precision": 0.3324326211761435,
+      "Precision@Top20%": 0.34782608695652173,
+      "Precision": 0.24666666666666667,
+      "Recall": 0.65,
+      "F1-Score": 0.31984486102133164
+    },
+    {
+      "Model": "Random Forest (Balanced)",
+      "ROC-AUC": 0.6483471714044469,
+      "Avg Precision": 0.24106588952872882,
+      "Precision@Top20%": 0.30434782608695654,
+      "Precision": 0.19494949494949493,
+      "Recall": 0.48,
+      "F1-Score": 0.23555555555555557
+    }
+  ]
+}
