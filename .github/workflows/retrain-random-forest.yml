@@ -1,0 +1,100 @@
+name: Retrain AMBA - Random Forest (produksi)
+
+# Pipeline PRODUKSI (feature-random-forest): jalur BACA penuh --
+# preprocessing/notebook/01_ambil_data.ipynb ->
+# eda_and_feature_engineering.ipynb -> modeling_and_evaluation.ipynb,
+# lalu mengunggah output/ (scores.json, backtest.json, model .joblib)
+# sebagai artifact GitHub Actions -- BUKAN di-commit balik ke repo,
+# supaya konsisten dengan .gitignore proyek ini (output/ sengaja
+# dikecualikan dari git).
+#
+# `python -m sectors_fetcher.main` (fetch Sectors API -> Supabase) TIDAK
+# dijalankan di sini -- lihat workflow terpisah
+# "fetch-sectors-to-supabase.yml" untuk jalur TULIS itu. Job ini murni
+# membaca tabel Supabase yang sudah terisi.
+on:
+  schedule:
+    # Setiap hari jam 22:00 WIB (15:00 UTC). Ganti sesuai kebutuhan, mis.
+    # mingguan tiap Senin: "0 15 * * 1".
+    - cron: "0 15 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: retrain-ambang-limina-random-forest
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SECTORS_API_KEY: ${{ secrets.SECTORS_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instal dependensi
+        run: pip install -r requirements.txt
+
+      - name: Cek secrets tersedia
+        run: |
+          missing=0
+          for v in SECTORS_API_KEY SUPABASE_URL SUPABASE_KEY; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Secret $v belum diset (Settings -> Secrets and variables -> Actions)."
+              missing=1
+            fi
+          done
+          if [ "$missing" = "1" ]; then exit 1; fi
+
+      # --ExecutePreprocessor.kernel_name=python3 WAJIB di sini: notebook
+      # eda_and_feature_engineering.ipynb dan modeling_and_evaluation.ipynb
+      # menyimpan kernelspec bernama "ambang" (venv lokal penulis), yang
+      # tidak ada di runner ini -- tanpa override ini nbconvert gagal dengan
+      # "kernel ambang not found", bukan error dari kode notebooknya sendiri.
+      - name: Jalankan 01_ambil_data.ipynb
+        run: |
+          jupyter nbconvert --to notebook --execute --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            --ExecutePreprocessor.timeout=1200 \
+            preprocessing/notebook/01_ambil_data.ipynb
+
+      - name: Jalankan eda_and_feature_engineering.ipynb
+        run: |
+          jupyter nbconvert --to notebook --execute --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            --ExecutePreprocessor.timeout=1200 \
+            preprocessing/notebook/eda_and_feature_engineering.ipynb
+
+      - name: Jalankan modeling_and_evaluation.ipynb
+        run: |
+          jupyter nbconvert --to notebook --execute --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            --ExecutePreprocessor.timeout=1200 \
+            preprocessing/notebook/modeling_and_evaluation.ipynb
+
+      # if: always() -- tetap unggah apa pun yang sempat dihasilkan
+      # (termasuk notebook dengan traceback error di sel terakhirnya)
+      # walaupun salah satu langkah di atas gagal, supaya gampang didiagnosis
+      # dari tab Actions tanpa perlu akses lokal ke runner.
+      - name: Unggah artefak (notebook hasil eksekusi + output/)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ambang-limina-random-forest-run-${{ github.run_number }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            preprocessing/notebook/01_ambil_data.ipynb
+            preprocessing/notebook/eda_and_feature_engineering.ipynb
+            preprocessing/notebook/modeling_and_evaluation.ipynb
+            output/

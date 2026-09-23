@@ -1,0 +1,67 @@
+name: Fetch Sectors API -> Supabase
+
+# Jalur TULIS: mengambil data mentah dari Sectors API v2 (sectors_fetcher/
+# endpoints/) untuk seluruh DEFAULT_TICKERS, lalu menyimpannya ke enam
+# tabel Supabase lewat `python -m sectors_fetcher.main`
+# (sectors_fetcher/storage/, lihat catatan di bawah). Ini yang mengisi
+# tabel yang nantinya dibaca oleh kedua pipeline latih
+# (retrain-random-forest.yml dan retrain-limina-main.yml).
+#
+# CATATAN PENTING: per README docs/README-pipeline-random-forest.md
+# bagian "Keterbatasan yang Diketahui", folder `sectors_fetcher/storage/`
+# (implementasi SupabaseStorage + save_*.py per tabel) TIDAK ada di
+# checkout/zip proyek ini. `sectors_fetcher/main.py` mengimpor langsung
+# dari `.storage.*`, jadi job ini akan GAGAL di langkah "Jalankan fetch"
+# sampai folder tersebut ditambahkan ke repo (atau main.py disesuaikan
+# ke implementasi storage yang tersedia). Job tetap disiapkan di sini
+# sesuai permintaan; jangan aktifkan jadwalnya sebelum storage/ lengkap,
+# supaya tidak gagal setiap hari secara diam-diam.
+on:
+  schedule:
+    # Nonaktif secara default -- baris cron di bawah dikomentari sampai
+    # sectors_fetcher/storage/ tersedia. Hapus tanda "#" untuk mengaktifkan.
+    # - cron: "0 14 * * *"   # 21:00 WIB, sebelum retrain-random-forest.yml (15:00 UTC)
+    - cron: "0 0 31 2 *" # placeholder yang tidak pernah jalan (31 Feb tidak ada)
+  workflow_dispatch: {}
+
+concurrency:
+  group: fetch-sectors-to-supabase
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SECTORS_API_KEY: ${{ secrets.SECTORS_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instal dependensi
+        run: pip install -r requirements.txt
+
+      - name: Cek secrets tersedia
+        run: |
+          missing=0
+          for v in SECTORS_API_KEY SUPABASE_URL SUPABASE_KEY; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Secret $v belum diset (Settings -> Secrets and variables -> Actions)."
+              missing=1
+            fi
+          done
+          if [ "$missing" = "1" ]; then exit 1; fi
+
+      # Pastikan sql/schema.sql (dirujuk sectors_fetcher/main.py) sudah
+      # dijalankan di Supabase SQL Editor sebelum job ini pernah sukses.
+      - name: Jalankan fetch Sectors API -> Supabase
+        run: python -m sectors_fetcher.main

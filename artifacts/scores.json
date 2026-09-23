@@ -1,5 +1,5 @@
 {
-  "dibuat_pada": "2026-09-20",
+  "dibuat_pada": "2026-09-22",
   "cakupan": {
     "total_emiten": 19,
     "diberi_skor": 19,
@@ -22,16 +22,16 @@
       "sektor": "Energy",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.0422179670886188,
-      "persentil": 47.368421052631575,
-      "kategori": "Rendah",
+      "skor": 0.040096077134030295,
+      "persentil": 52.63157894736842,
+      "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -113,7 +113,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 173,
+          "nilai_mentah": 175,
           "kontribusi": 2.6692695630078274
         },
         {
@@ -186,8 +186,8 @@
       "sektor": "Industrials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.04412690868019331,
-      "persentil": 60.526315789473685,
+      "skor": 0.04199754836454539,
+      "persentil": 57.89473684210527,
       "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -195,7 +195,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -268,7 +268,7 @@
       "sektor": "Financials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.10538432058637093,
+      "skor": 0.10419861835542399,
       "persentil": 94.73684210526315,
       "kategori": "Tinggi",
       "arah_30h": "stabil",
@@ -277,7 +277,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -359,7 +359,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -432,7 +432,7 @@
       "sektor": "Basic Materials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.02918003514984302,
+      "skor": 0.025046403319683108,
       "persentil": 34.21052631578947,
       "kategori": "Rendah",
       "arah_30h": "stabil",
@@ -441,7 +441,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -514,7 +514,7 @@
       "sektor": "Industrials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.019117447383632746,
+      "skor": 0.017890092210767206,
       "persentil": 26.31578947368421,
       "kategori": "Rendah",
       "arah_30h": "stabil",
@@ -523,7 +523,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -605,7 +605,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 173,
+          "nilai_mentah": 175,
           "kontribusi": 2.6692695630078274
         },
         {
@@ -678,7 +678,7 @@
       "sektor": "Consumer Cyclicals",
       "papan": "Acceleration",
       "status": "dinilai",
-      "skor": 0.05295311870785846,
+      "skor": 0.04863378604174651,
       "persentil": 68.42105263157895,
       "kategori": "Sedang",
       "arah_30h": "stabil",
@@ -687,7 +687,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -769,7 +769,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 173,
+          "nilai_mentah": 175,
           "kontribusi": 2.6692695630078274
         },
         {
@@ -842,7 +842,7 @@
       "sektor": "Consumer Cyclicals",
       "papan": "Acceleration",
       "status": "dinilai",
-      "skor": 0.00459392137769099,
+      "skor": 0.0026192675707233937,
       "persentil": 10.526315789473683,
       "kategori": "Rendah",
       "arah_30h": "stabil",
@@ -851,7 +851,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -925,7 +925,7 @@
       "papan": "Watchlist",
       "status": "dinilai",
       "skor": 0.004652339071947287,
-      "persentil": 15.789473684210526,
+      "persentil": 21.052631578947366,
       "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -933,7 +933,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1006,16 +1006,16 @@
       "sektor": "Technology",
       "papan": "Development",
       "status": "dinilai",
-      "skor": 0.06390081120047963,
-      "persentil": 81.57894736842105,
-      "kategori": "Tinggi",
+      "skor": 0.059495961834665434,
+      "persentil": 78.94736842105263,
+      "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1089,7 +1089,7 @@
       "papan": "Acceleration",
       "status": "dinilai",
       "skor": 0.04406392147706972,
-      "persentil": 52.63157894736842,
+      "persentil": 63.1578947368421,
       "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -1097,7 +1097,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1170,7 +1170,7 @@
       "sektor": "Healthcare",
       "papan": "Development",
       "status": "dinilai",
-      "skor": 0.03776379393510254,
+      "skor": 0.03356311101423559,
       "persentil": 42.10526315789473,
       "kategori": "Rendah",
       "arah_30h": "stabil",
@@ -1179,7 +1179,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1252,8 +1252,8 @@
       "sektor": "Healthcare",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.008189963400070499,
-      "persentil": 21.052631578947366,
+      "skor": 0.004220293214226234,
+      "persentil": 15.789473684210526,
       "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -1261,7 +1261,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1334,16 +1334,16 @@
       "sektor": "Infrastructures",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.04412690868019331,
-      "persentil": 60.526315789473685,
-      "kategori": "Sedang",
+      "skor": 0.03987652098608829,
+      "persentil": 47.368421052631575,
+      "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1416,7 +1416,7 @@
       "sektor": "Basic Materials",
       "papan": "Development",
       "status": "dinilai",
-      "skor": 0.02918003514984302,
+      "skor": 0.025046403319683108,
       "persentil": 34.21052631578947,
       "kategori": "Rendah",
       "arah_30h": "stabil",
@@ -1425,7 +1425,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1499,7 +1499,7 @@
       "papan": "Acceleration",
       "status": "dinilai",
       "skor": 0.06390081120047963,
-      "persentil": 81.57894736842105,
+      "persentil": 84.21052631578947,
       "kategori": "Tinggi",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -1507,7 +1507,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 82,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {

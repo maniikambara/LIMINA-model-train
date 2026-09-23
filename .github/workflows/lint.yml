@@ -1,0 +1,78 @@
+name: Lint & Cek Sintaks
+
+# Jalan di setiap push/PR -- TIDAK butuh secrets, jadi aman dijalankan
+# kapan saja (fork/PR eksternal termasuk). Tujuannya menangkap error
+# sintaks/import sebelum job "retrain" (yang butuh kredensial dan kuota
+# API) sempat dijalankan sia-sia.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch: {}
+
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instal dependensi
+        run: pip install -r requirements.txt
+
+      - name: Cek sintaks seluruh modul Python (sectors_fetcher/)
+        run: |
+          git ls-files '*.py' | xargs -r python -m py_compile
+
+      - name: Cek sintaks seluruh sel kode notebook
+        run: |
+          python - <<'PY'
+          import ast
+          import json
+          import pathlib
+          import sys
+
+          gagal = False
+          for path in sorted(pathlib.Path("preprocessing/notebook").glob("*.ipynb")):
+              nb = json.loads(path.read_text(encoding="utf-8"))
+              for i, cell in enumerate(nb["cells"]):
+                  if cell["cell_type"] != "code":
+                      continue
+                  src = "".join(cell["source"])
+                  try:
+                      ast.parse(src)
+                  except SyntaxError as e:
+                      gagal = True
+                      print(f"::error file={path}::Sel kode {i}: {e}")
+              print(f"OK: {path} ({len(nb['cells'])} sel)")
+
+          sys.exit(1 if gagal else 0)
+          PY
+
+      # features/pipeline.py dan main.py SENGAJA tidak diimpor di sini --
+      # keduanya butuh sectors_fetcher/storage/, yang menurut README belum
+      # ada di checkout ini (lihat bagian Keterbatasan). service.py dites di
+      # sini justru untuk memastikan klaim README "sudah dibuat toleran"
+      # (import ditunda, tidak crash tanpa storage/) tetap benar.
+      - name: Import cepat sectors_fetcher (tanpa kredensial)
+        run: |
+          python -c "
+          import sectors_fetcher
+          from sectors_fetcher import config, client, supabase_io, service
+          from sectors_fetcher.risk_scorer_fallback import SkorAnomaliMahalanobis
+          from sectors_fetcher.features import compliance, financial_health, liquidity_price, ownership
+          print('Import sectors_fetcher OK, DEFAULT_TICKERS:', len(config.DEFAULT_TICKERS), 'simbol')
+          "

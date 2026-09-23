@@ -10,35 +10,61 @@ LIMINA bukan nasihat investasi, bukan prediksi kebangkrutan atau
 kecurangan, dan bukan pengganti pengumuman resmi BEI. Keputusan membeli,
 menjual, atau menahan saham sepenuhnya tanggung jawab pengguna sendiri.
 
-## Tentang nama dan asal proyek
-
 Proyek ini sebelumnya dirancang dengan nama kerja AMBANG/AMBA untuk
-Sectors Hackathon 2026, Track 03 Market Intelligence. Rancangan awal
-(termasuk daftar variabel, arsitektur, dan metodologi evaluasi) masih
-berlaku penuh dan diarsipkan apa adanya di `docs/rancangan/`. Yang
-berubah pada tahap ini adalah namanya menjadi LIMINA, sumber datanya
-langsung dari Supabase (bukan lagi memanggil Sectors API secara
-langsung), dan seluruh kode ditata ulang menjadi notebook modular yang
-bisa dijalankan berkala untuk melatih ulang model secara otomatis.
+Sectors Hackathon 2026, Track 03 Market Intelligence.
+
+## Dua pipeline di repo ini
+
+Repo ini adalah gabungan dua branch/proyek yang tadinya terpisah. Tidak
+ada berkas yang dihapus saat digabung -- keduanya berjalan berdampingan:
+
+| | Pipeline **produksi** (utama) | Pipeline **arsip** |
+|---|---|---|
+| Asal | `LIMINA-model-train-feature-random-forest` | `LIMINA-model-train-main` |
+| Status | **Berhasil melatih model** -- dipakai sebagai acuan utama | Bug diketahui: `data_complete==1` bisa kosong (lihat `notebooks/03_pelatihan_model.ipynb`), watchlist 12 emiten blue-chip nyaris tidak beririsan dengan emiten yang pernah suspensi |
+| Kode | `sectors_fetcher/`, `preprocessing/notebook/` | `limina/`, `notebooks/`, `tests/` |
+| Model | Logistic Regression + **Random Forest** (`BalancedRandomForestClassifier`, tuning 2 tahap), model dengan Average Precision CV tertinggi dipilih otomatis | Logistic Regression (utama) vs. gradient boosting (pembanding), plus rule-based/Isolation Forest sebagai fallback |
+| Keluaran | `output/` (gitignored, diunggah sebagai artifact CI) | `artifacts/` (sebagian di-commit balik lewat CI dengan `git add -f`) |
+| Workflow | `.github/workflows/retrain-random-forest.yml` | `.github/workflows/retrain-limina-main.yml` |
+| Dokumentasi asli | `docs/README-pipeline-random-forest.md` (README lengkap branch ini) | Bagian di bawah pada README ini |
+
+Karena pipeline produksi yang terbukti berhasil melatih modelnya,
+gunakan itu sebagai jalur utama. Pipeline arsip tetap dipertahankan apa
+adanya untuk referensi, riwayat, dan karena berisi test suite (`tests/`)
+serta modul inti (`limina/`) yang lebih matang secara arsitektur
+(point-in-time enforcement dua lapis, empat pemeriksaan kebocoran,
+gerbang keputusan model-vs-rule-based) -- lihat bagian "Metodologi" di
+bawah.
 
 ## Struktur proyek
 
 ```
 LIMINA/
-  notebooks/
-    01_ambil_data.ipynb                   ambil/perbarui data dari Supabase
-    02_preprocessing_dan_normalisasi.ipynb bangun panel + label + standardisasi
-    03_pelatihan_model.ipynb               latih model, empat pemeriksaan kebocoran
-    04_evaluasi_model.ipynb                backtest, gerbang keputusan, selisih waktu
-    05_penilaian_dan_artefak.ipynb         skor pasar hari ini, artefak produk
-  limina/                                  kode inti yang dipakai seluruh notebook
-  tests/                                   pengujian unit (pytest)
-  data/
-    labels/taksonomi_alasan_suspensi.json  taksonomi alasan suspensi (A/B/C)
-    raw/, panel.csv, snapshot_*.csv        dihasilkan ulang tiap siklus (gitignored)
-  artifacts/                               model terlatih, scores.json, backtest.json
-  docs/rancangan/                          dokumen rancangan asli (AMBANG/AMBA), arsip
-  .github/workflows/update-model.yml       jadwal pembaruan otomatis harian
+  sectors_fetcher/                        pipeline PRODUKSI -- fetch Sectors API + tulis Supabase
+    client.py, config.py, main.py           HTTP client, konfigurasi, entry point fetch->Supabase
+    supabase_io.py                          pembaca Supabase (baca saja), dipakai notebook 01
+    endpoints/                              satu modul per endpoint API (fetch mentah saja)
+    features/                               11 indikator turunan (referensi, lihat catatan duplikasi)
+    service.py                              AMBAScoringService: preprocessing + inferensi + skor produksi
+  preprocessing/notebook/                 pipeline PRODUKSI -- notebook latih
+    01_ambil_data.ipynb                     unduh 6 tabel Supabase (baca saja) -> data/raw/
+    eda_and_feature_engineering.ipynb       audit data, taksonomi suspensi, feature engineering PIT
+    modeling_and_evaluation.ipynb           Logistic Regression + Random Forest + tuning, evaluasi
+  output/                                 keluaran pipeline produksi (gitignored): dataset, scores.json,
+                                           backtest.json, model *.joblib
+
+  limina/                                 pipeline ARSIP -- kode inti dipakai notebooks/ + tests/
+  notebooks/                              pipeline ARSIP -- notebook 01-05 (lihat README lama di bawah)
+  tests/                                  pengujian unit (pytest) untuk limina/
+  data/labels/taksonomi_alasan_suspensi.json  taksonomi alasan suspensi (A/B/C), dipakai kedua pipeline
+  artifacts/                              keluaran pipeline arsip: model terlatih, scores.json, backtest.json
+
+  docs/README-pipeline-random-forest.md   README asli lengkap pipeline produksi (feature-random-forest)
+  .github/workflows/
+    retrain-random-forest.yml               jadwal retrain pipeline produksi
+    retrain-limina-main.yml                 jadwal retrain pipeline arsip
+    fetch-sectors-to-supabase.yml           jalur TULIS: Sectors API -> Supabase (lihat catatan di bawah)
+    lint.yml                                cek sintaks Python + notebook di tiap push/PR (tidak butuh secrets)
 ```
 
 ## 1. Persiapan
@@ -49,28 +75,36 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Python 3.10 atau lebih baru.
+Python 3.11 atau lebih baru (pipeline arsip pernah diuji di 3.12, pipeline
+produksi di 3.11 -- lihat masing-masing workflow).
 
-### Isi kredensial Supabase
+### Isi kredensial
 
-Salin `.env.example` menjadi `.env`, lalu isi dua nilainya:
+Dua templat `.env.example` tersedia:
 
-```
-SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-SUPABASE_KEY=isi_anon_atau_publishable_key_anda
-```
+- `.env.example` (root) -- dipakai pipeline arsip (`limina/config.py`),
+  hanya butuh `SUPABASE_URL`/`SUPABASE_KEY`.
+- `sectors_fetcher/.env.example` -- dipakai pipeline produksi, butuh
+  tambahan `SECTORS_API_KEY`.
 
-`.env` sudah masuk `.gitignore`, tidak akan pernah ikut ter-commit.
-Seluruh kode di proyek ini hanya membaca (`select`) tabel yang sudah ada
-di Supabase Anda; tidak ada satu baris kode pun yang menulis, mengubah,
-atau membuat struktur tabel baru. Kalau kredensial belum diisi, notebook
-01 berhenti dengan pesan yang menjelaskan persis apa yang kurang, bukan
-gagal diam-diam atau memakai data contoh.
+Salin masing-masing jadi `.env` (tanpa akhiran `.example`) di folder yang
+sama, lalu isi nilainya. Kedua `.env` sudah masuk `.gitignore`, tidak akan
+pernah ikut ter-commit.
+
+> **Catatan keamanan:** saat digabung, berkas `sectors_fetcher/.env` di
+> proyek asal (branch `feature-random-forest`) ternyata berisi URL dan key
+> Supabase asli (bukan placeholder). Berkas itu **tidak disertakan** ke
+> repo/zip hasil gabungan ini -- diganti `sectors_fetcher/.env.example`
+> berisi placeholder saja. Kalau key itu sudah pernah dibagikan/di-commit
+> di tempat lain, sebaiknya di-rotate dari dashboard Supabah Anda.
+
+Seluruh kode di kedua pipeline hanya membaca (`select`) tabel yang sudah
+ada di Supabase Anda, kecuali `sectors_fetcher.main` (lihat workflow
+`fetch-sectors-to-supabase.yml`) yang memang jalur tulis.
 
 ### Skema tabel Supabase yang diharapkan
 
-Enam tabel, dibaca apa adanya. Kalau nama tabel atau kolom Anda berbeda,
-ubah di satu tempat: `limina/config.py`.
+Enam tabel, dibaca apa adanya oleh kedua pipeline:
 
 | Tabel | Kolom yang dipakai |
 |---|---|
@@ -79,199 +113,90 @@ ubah di satu tempat: `limina/config.py`.
 | `daily_full_universe_close` | symbol, date, close, volume, market_cap |
 | `free_float_snapshot` | symbol, snapshot_date, free_float, sub_sector |
 | `company_overview` | symbol, company_name, sector, sub_sector, board |
-| `stock_suspensions` | symbol, suspension_date (atau nama lain, atur di config.py), reason, pdf_url |
+| `stock_suspensions` | symbol, suspension_date, reason, pdf_url |
 
-`company_overview` opsional secara teknis (kode berjalan tanpanya), tapi
-sangat disarankan diisi: tanpa tabel ini, seluruh emiten dianggap papan
-"Main" secara default, dan sektor didekati dari `free_float_snapshot`
-saja.
+Nama tabel/kolom pipeline arsip diatur di `limina/config.py`; pipeline
+produksi di `sectors_fetcher/config.py`.
 
-## 2. Menjalankan siklus latih pertama kali
+## 2. GitHub Actions (4 workflow)
 
-Jalankan kelima notebook berurutan, satu kali, dari awal:
+Tiga workflow inti sesuai permintaan penggabungan proyek ini, plus satu
+workflow lint yang sudah ada sebelumnya di branch `feature-random-forest`
+dan dipertahankan (tidak dihapus):
 
-1. **01_ambil_data** -- mengunduh keenam tabel dari Supabase apa adanya
-   (seluruh histori yang sudah terkumpul di sana, tidak dibatasi tanggal),
-   menyimpan cache lokal di `data/raw/`.
-2. **02_preprocessing_dan_normalisasi** -- mengklasifikasikan alasan
-   suspensi ke kategori A/B/C, membangun `data/panel.csv` (data latih,
-   sampel berimbang) dan enam `data/snapshot_<tanggal>.csv` (potret
-   evaluasi, proporsi kejadian apa adanya), lalu menyimpan jendela
-   latih/uji yang dipakai siklus ini ke `data/jendela_latih.json`.
-3. **03_pelatihan_model** -- memilih salah satu dari tiga jalur tergantung
-   baris `data_complete == 1` yang tersedia: (a) >=20 baris dan >=2 positif
-   -> melatih regresi logistik (model utama) dan gradient boosting
-   (pembanding), menjalankan empat pemeriksaan kebocoran; (b) positif
-   kurang tapi >=5 baris lengkap -> Kandidat 5 (Isolation Forest, anomali
-   tanpa label); (c) selain itu -> rule_based_penuh, tidak ada yang
-   dilatih. Keputusan dicatat ke `artifacts/keputusan.json`.
-4. **04_evaluasi_model** -- Precision@20/Recall@90 hari/AUC lintas enam
-   potret, gerbang keputusan (regresi logistik vs. rule-based),
-   rekonstruksi selisih waktu deteksi sungguhan, menulis
-   `artifacts/backtest.json` dan `artifacts/ringkasan_evaluasi.md`. Seluruh
-   isi notebook ini membandingkan terhadap Kandidat 1 -- kalau notebook 03
-   mengambil jalur (b)/(c) di atas, notebook ini mencetak penjelasan dan
-   melewati evaluasinya (tidak menulis backtest.json siklus itu), bukan
-   gagal dengan galat berkas tidak ditemukan.
-5. **05_penilaian_dan_artefak** -- menilai seluruh cakupan emiten dengan
-   data pasar hari ini, menulis `artifacts/scores.json` -- inilah keluaran
-   yang dibaca dashboard/produk. Memakai kandidat terbaik yang tersedia,
-   berurutan: Kandidat 1 (regresi logistik) -> Kandidat 5 (anomali tanpa
-   label) -> Kandidat 4 (rule-based, tidak perlu pelatihan) -- dan beralih
-   naik ke kandidat yang lebih baik dengan sendirinya begitu notebook 03
-   berhasil melatihnya.
+1. **`retrain-random-forest.yml`** (pipeline produksi) -- menjalankan
+   ulang `preprocessing/notebook/01_ambil_data.ipynb` ->
+   `eda_and_feature_engineering.ipynb` -> `modeling_and_evaluation.ipynb`
+   setiap hari 15:00 UTC, mengunggah `output/` sebagai artifact CI (tidak
+   di-commit balik, konsisten dengan `.gitignore`). Butuh secrets
+   `SECTORS_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`.
+2. **`retrain-limina-main.yml`** (pipeline arsip) -- menjalankan ulang
+   `notebooks/01`-`05` setiap hari 22:00 UTC, meng-commit balik
+   `artifacts/scores.json`, `artifacts/backtest.json`,
+   `artifacts/ringkasan_evaluasi.md`, `artifacts/riwayat_skor.csv`. Butuh
+   secrets `SUPABASE_URL`, `SUPABASE_KEY`.
+3. **`fetch-sectors-to-supabase.yml`** (baru) -- jalur TULIS, mengambil
+   data mentah dari Sectors API lalu menyimpannya ke Supabase lewat
+   `python -m sectors_fetcher.main`. **Jadwalnya sengaja dinonaktifkan**
+   (lihat komentar di dalam berkasnya): `sectors_fetcher/main.py`
+   mengimpor `sectors_fetcher/storage/`, folder yang menurut
+   `docs/README-pipeline-random-forest.md` (bagian Keterbatasan) memang
+   belum ada di checkout ini, jadi job ini akan gagal sampai folder
+   tersebut ditambahkan. Bisa dipicu manual (`workflow_dispatch`) untuk
+   dites begitu `storage/` sudah lengkap.
+4. **`lint.yml`** -- cek sintaks seluruh modul Python (`sectors_fetcher/`)
+   dan sel kode notebook (`preprocessing/notebook/`) di tiap push/PR,
+   tidak butuh secrets.
 
-Ini disebut "notebook 01-05" sepanjang dokumen ini karena semua penomoran
-mengikuti urutan file, bukan urutan cell di dalam satu notebook.
+Secrets diisi di Settings > Secrets and variables > Actions:
+`SECTORS_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`.
 
-Ini adalah **pelatihan pertama**: model dilatih dari seluruh data yang
-sudah terkumpul di Supabase pada saat itu (biasa disebut di percakapan
-tim sebagai "data yang sudah diambil, 90 hari atau lebih").
+## 3. Pipeline arsip -- ringkasan (notebooks/01-05, `limina/`)
 
-Kalau `data/panel.csv` yang terbentuk punya kurang dari sekitar 30
-peristiwa kategori C, notebook 02 mencetak peringatan eksplisit. Model
-tetap dilatih dan tetap dievaluasi -- ini bukan alasan berhenti -- tapi
-seluruh metrik pada sampel sekecil itu punya selang kepercayaan lebar
-dan wajib disebutkan begitu setiap kali hasilnya dilaporkan ke orang
-lain (lihat `docs/rancangan/metodologi.md` bagian 9).
+Bagian ini meringkas README asli branch `main` untuk pipeline arsip.
 
-## 3. Kalau notebook 02/03 melapor data tidak lengkap
+1. **01_ambil_data** -- mengunduh keenam tabel dari Supabase, cache lokal
+   di `data/raw/`.
+2. **02_preprocessing_dan_normalisasi** -- klasifikasi alasan suspensi
+   A/B/C, membangun `data/panel.csv` + enam `data/snapshot_<tanggal>.csv`.
+3. **03_pelatihan_model** -- regresi logistik (utama) + gradient boosting
+   (pembanding) kalau data cukup, empat pemeriksaan kebocoran; fallback
+   Isolation Forest atau rule-based kalau data kurang.
+4. **04_evaluasi_model** -- Precision@20/Recall@90 hari/AUC, gerbang
+   keputusan model vs. rule-based, `artifacts/backtest.json`.
+5. **05_penilaian_dan_artefak** -- skor seluruh cakupan emiten hari ini,
+   `artifacts/scores.json`.
 
-Tiap potret/baris panel punya kolom `data_complete`. Notebook 02
-mencetak diagnosa cakupan sebelum membangun apa pun dan proporsi baris
-lengkap setelahnya. Notebook 03 menyaring `data_complete == 0` sebelum
-melatih dan berhenti dengan pesan jelas kalau sisanya terlalu sedikit,
-bukan galat sklearn membingungkan soal "Input X contains NaN".
+Metodologi yang mengikat pipeline ini: point-in-time dua lapis
+(`limina/pit.py`, `limina/leakage.py`), skor ditampilkan sebagai
+persentil/kategori (bukan probabilitas mentah), akurasi tidak pernah
+dipakai sebagai metrik utama, gerbang keputusan
+(`limina/snapshot.py::gerbang_keputusan`), validasi silang selalu
+temporal (`limina/splits.py`), tidak pernah acak.
 
-Penyebab paling umum, berurutan:
+Pengujian: `pytest tests/ -v` (data sintetis khusus uji statistik, bukan
+data produksi).
 
-1. **Format symbol tidak konsisten antar tabel.** Cek
-   `contoh_symbol_universe`/`contoh_symbol_quarterly_financials`/
-   `contoh_symbol_harga` di cetakan diagnosa notebook 02 -- kalau satu
-   daftar berakhiran `.JK` dan yang lain tidak, itu sumbernya
-   (`tumpang_tindih_*_persen` jauh di bawah 100 memastikannya). Nama
-   kolom tabel suspensi sudah disesuaikan otomatis
-   (`supabase_io.py::normalisasi_tabel_suspensi`); kelima tabel lain
-   divalidasi lewat `supabase_io.py::validasi_kolom_tabel`.
-2. **Riwayat `quarterly_financials`/`daily_transaction` belum cukup
-   panjang.** Bandingkan `report_date_min/max` dan `harga_date_min/max`
-   dengan `tanggal_potret` yang dicetak berikutnya -- memperpendek
-   jendela (`JENDELA_PIT_HARI`/`JENDELA_HARGA_HARI`) tidak menyiasati
-   ini kalau peristiwanya sudah terjadi sebelum riwayat mulai terekam.
+## 4. Pipeline produksi -- ringkasan (`sectors_fetcher/`, `preprocessing/notebook/`)
 
-Kalau `jumlah_symbol_kategori_c_siap_dilatih` nol, prioritas tertinggi:
-perluas cakupan `quarterly_financials`/`daily_transaction` ke symbol di
-`symbol_kategori_c_belum_punya_quarterly_financials_contoh` -- itulah
-emiten yang riwayatnya paling penting dipelajari model. Kalau mahal
-per-symbol, cakupan per-sektor (emiten sesektor dengan yang pernah kena
-kategori C) adalah alternatif yang lebih murah untuk memulai.
+Lihat `docs/README-pipeline-random-forest.md` untuk dokumentasi lengkap
+(alur data, tiga model yang dibandingkan, seleksi otomatis via Average
+Precision CV, `StratifiedGroupKFold` per-symbol, dan bagian Keterbatasan
+soal `sectors_fetcher/storage/`, `sql/schema.sql`, dan duplikasi logika
+`features/*.py` vs. `service.py`).
 
-## 4. Pembaruan berkala (harian/mingguan)
+## 5. Keterbatasan gabungan yang diketahui
 
-Menjalankan ulang notebook 01-05 ADALAH cara memperbarui model.
-Tidak ada perbedaan kode antara "pelatihan pertama" dan "pembaruan
-ke-100": `limina/splits.py` menghitung ulang jendela latih dan enam
-tanggal potret evaluasi setiap kali dijalankan, RELATIF terhadap
-tanggal hari itu -- bukan tanggal tetap yang tertulis di kode. Setiap
-kali Supabase punya data lebih baru, siklus berikutnya otomatis
-memakainya, tanpa menyunting satu baris kode pun.
-
-Model lama tidak pernah hilang begitu saja: `03_pelatihan_model`
-menyimpan salinan kanonis (dipakai notebook 04/05) DAN satu salinan
-berstempel waktu di `artifacts/models/<stempel>/` setiap kali
-dijalankan, supaya ada riwayat versi untuk dibandingkan atau
-dikembalikan manual kalau suatu siklus retraining menghasilkan model
-yang tiba-tiba jauh lebih buruk.
-
-### Opsi A -- GitHub Actions (sudah disiapkan)
-
-`.github/workflows/update-model.yml` menjalankan kelima notebook secara
-berurutan setiap hari jam 22:00 UTC (05:00 WIB), lalu meng-commit balik
-`artifacts/scores.json`, `artifacts/backtest.json`,
-`artifacts/ringkasan_evaluasi.md`, dan `artifacts/riwayat_skor.csv` ke
-repositori. Yang perlu disiapkan:
-
-1. Push proyek ini ke repositori GitHub.
-2. Di Settings > Secrets and variables > Actions, tambahkan
-   `SUPABASE_URL` dan `SUPABASE_KEY`.
-3. Ubah jadwal cron di berkas workflow kalau ingin mingguan, bukan
-   harian (contoh sudah dikomentari di dalam berkasnya).
-
-Model dan scaler (berkas `.joblib`) sengaja TIDAK ikut di-commit (lihat
-`.gitignore`) -- setiap siklus melatih ulang dari nol dari data
-Supabase saat itu, konsisten dengan cara notebook 01 mengambil seluruh
-data yang tersedia, bukan hanya delta harian.
-
-### Opsi B -- cron di server/VPS sendiri
-
-```
-0 22 * * * cd /path/ke/LIMINA && .venv/bin/jupyter nbconvert --to notebook --execute --inplace notebooks/01_ambil_data.ipynb && .venv/bin/jupyter nbconvert --to notebook --execute --inplace notebooks/02_preprocessing_dan_normalisasi.ipynb && .venv/bin/jupyter nbconvert --to notebook --execute --inplace notebooks/03_pelatihan_model.ipynb && .venv/bin/jupyter nbconvert --to notebook --execute --inplace notebooks/04_evaluasi_model.ipynb && .venv/bin/jupyter nbconvert --to notebook --execute --inplace notebooks/05_penilaian_dan_artefak.ipynb
-```
-
-Pastikan `SUPABASE_URL`/`SUPABASE_KEY` diekspor di environment cron
-(atau taruh di `.env` pada folder proyek).
-
-### Opsi C -- platform hosting dengan cron job terjadwal
-
-Platform dengan cron job berjadwal untuk perintah Python (Railway,
-Render, dsb.) bisa memakai perintah yang sama seperti Opsi B, dengan
-`SUPABASE_URL`/`SUPABASE_KEY` diisi lewat environment variable/secret
-platform tersebut. Folder proyek dan `artifacts/` perlu tetap ada antar
-run (untuk versi model dan `riwayat_skor.csv`).
-
-## 5. Metodologi (ringkas)
-
-Rincian penuh ada di `docs/rancangan/`. Poin yang mengikat seluruh kode:
-
-- **Point-in-time**: setiap baris hanya boleh memakai data yang sudah
-  tersedia pada `as_of_date`-nya, dengan jeda aman 30 hari
-  (`limina/pit.py`). Ditegakkan dua lapis: saat pengambilan data
-  (`limina/raw_ingest.py`) dan saat memeriksa dataset yang sudah jadi
-  (`limina/leakage.py`, empat pemeriksaan, dijalankan tiap siklus latih).
-- **Skor bukan probabilitas**: yang ditampilkan ke pengguna adalah
-  `persentil` dan `kategori` (Rendah/Sedang/Tinggi/Sangat Tinggi), tidak
-  pernah angka mentah model sebagai "kemungkinan sekian persen" --
-  jumlah sampel positif yang tersedia terlalu kecil untuk mengklaim
-  model terkalibrasi.
-- **Akurasi tidak pernah dilaporkan** sebagai metrik utama (kelas
-  sangat timpang membuatnya menyesatkan). Metrik yang dilaporkan:
-  Precision@20, Recall@90 hari, AUC, dan selisih waktu deteksi
-  terhadap label resmi.
-- **Gerbang keputusan** (`limina/snapshot.py::gerbang_keputusan`)
-  membandingkan regresi logistik terhadap pembanding rule-based setiap
-  siklus evaluasi; kalau model tidak menang mayoritas potret, rule-based
-  yang jadi mesin utama, model tetap ditampilkan sebagai pembanding.
-- **Validasi silang acak tidak pernah dipakai.** Pemisahan selalu
-  temporal (`limina/splits.py`), karena mencampur masa depan ke data
-  latih adalah bentuk kebocoran, bukan validasi yang sah.
-
-## 6. Keterbatasan yang diketahui
-
-1. `already_flagged` (status Notasi Khusus BEI resmi pada satu
-   `as_of_date`) belum punya sumber data mentah di enam tabel Supabase
-   di atas, jadi diisi 0 untuk seluruh baris. Kalau Anda punya sumber
-   datanya, ini titik yang perlu diperluas di `limina/raw_ingest.py`.
-2. `board` (papan pencatatan) jatuh ke default "Main" untuk emiten yang
-   belum tercakup `company_overview`.
-3. `free_float_rendah` hanya dipakai saat penilaian langsung (notebook
-   05), tidak pernah saat melatih, karena `free_float_snapshot`
-   kemungkinan besar hanya menyimpan nilai terkini, bukan riwayat.
-4. `arah_30h`/`delta_30h` pada `scores.json` baru bermakna setelah
-   `artifacts/riwayat_skor.csv` terkumpul sekitar 30 hari; sebelum itu
-   seluruh emiten akan tertulis "stabil" apa adanya, bukan galat.
-5. Taksonomi alasan suspensi (`data/labels/taksonomi_alasan_suspensi.json`)
-   sudah divalidasi terhadap riwayat suspensi sungguhan, tapi bukan
-   daftar final -- notebook 02 mencetak baris yang tidak cocok kata
-   kunci manapun setiap kali dijalankan; tinjau baris itu secara manual.
-6. Selisih waktu deteksi historis tidak menjamin performa masa depan.
-
-## 7. Pengujian
-
-```
-pytest tests/ -v
-```
-
-Pengujian memakai data sintetis yang dibuat khusus untuk uji statistik
-(`tests/conftest.py`), bukan pengganti data produk -- tidak ada satu
-jalur produksi pun (notebook 01-05) yang memakai data buatan; seluruhnya
-memakai data Supabase sungguhan.
+- `sectors_fetcher/storage/` dan `sql/schema.sql` tidak ada di checkout
+  ini -- lihat catatan di workflow `fetch-sectors-to-supabase.yml`.
+- `docs/rancangan/` (dirujuk README asli branch `main`) dan
+  `docs/AMBA-dokumentasi-variabel-dan-pemodelan.md` /
+  `docs/AMBANG-panduan-api-sectors.md` (dirujuk README asli branch
+  `feature-random-forest`) sama-sama dirujuk di README masing-masing
+  tapi tidak ada di zip sumbernya -- bukan sesuatu yang terhapus saat
+  penggabungan ini, memang sudah tidak ada sejak awal.
+- `already_flagged`, `board` default "Main", dan keterbatasan lain per
+  pipeline arsip ada di README asli (bagian 6, diarsipkan di riwayat git).
+- Bug cakupan data pipeline arsip (`data_complete==1` kosong) belum
+  diperbaiki di notebook arsip itu sendiri -- itulah alasan pipeline
+  produksi (Random Forest) dijadikan acuan utama di repo gabungan ini.

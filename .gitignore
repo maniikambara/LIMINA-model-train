@@ -1,6 +1,10 @@
 # Kredensial
 .env
+sectors_fetcher/.env
+*/sql
+sql/
 
+# --- Pipeline notebooks/01-05 + limina/ (arsip LIMINA/AMBANG) ---
 # Data yang diunduh/dihasilkan ulang tiap siklus -- bukan kode sumber,
 # jangan ikut dikirim ke Git. Taksonomi di data/labels/ TETAP dikirim
 # (itu keputusan tim, bukan data mentah).
@@ -9,12 +13,16 @@ data/panel.csv
 data/snapshot_*.csv
 data/jendela_latih.json
 
-# Model dan keluaran hasil latihan
+# Model dan keluaran hasil latihan (pipeline arsip)
 artifacts/*.joblib
 artifacts/models/
 artifacts/*.json
 artifacts/*.md
 artifacts/riwayat_skor.csv
+
+# --- Pipeline sectors_fetcher/ + preprocessing/ (produksi, random-forest) ---
+output/
+preprocessing/notebook/data/raw/
 
 # Python
 __pycache__/
