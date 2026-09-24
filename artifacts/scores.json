@@ -1,19 +1,19 @@
 {
-  "dibuat_pada": "2026-09-24",
+  "dibuat_pada": "2026-09-22",
   "cakupan": {
-    "total_emiten": 22,
-    "diberi_skor": 21,
-    "tidak_dapat_dinilai": 1,
+    "total_emiten": 19,
+    "diberi_skor": 19,
+    "tidak_dapat_dinilai": 0,
     "sudah_ditandai": 0
   },
   "model": {
     "jenis": "anomali_kandidat_5",
-    "dilatih_pada": "anomali tanpa label, lihat limina/models.py::latih_kandidat_5 (anomali_tanpa_label: 0 positif dari 11 baris lengkap)",
-    "jumlah_sampel_positif_latih": 65
+    "dilatih_pada": "anomali tanpa label, lihat limina/models.py::latih_kandidat_5 (anomali_tanpa_label: 0 positif dari 9 baris lengkap)",
+    "jumlah_sampel_positif_latih": 64
   },
   "ambang": {
-    "persentil": 9.090909090909093,
-    "nilai": -0.054907577337501345
+    "persentil": 0.0,
+    "nilai": 0.0016645886054190706
   },
   "emiten": [
     {
@@ -22,16 +22,16 @@
       "sektor": "Energy",
       "papan": "Main",
       "status": "dinilai",
-      "skor": -0.01941420586634207,
-      "persentil": 27.27272727272727,
-      "kategori": "Rendah",
+      "skor": 0.040096077134030295,
+      "persentil": 52.63157894736842,
+      "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -56,7 +56,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.37763304720826363,
-          "kontribusi": -0.5343227388461977
+          "kontribusi": -0.6995287680428888
         },
         {
           "nama": "ako_negatif_berturut",
@@ -67,282 +67,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.8408423022257645,
-          "kontribusi": -0.2787988838372192
+          "nilai_mentah": 0.8222853669416046,
+          "kontribusi": -0.35071987667547283
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": 0.0,
-          "kontribusi": 0.37938029729901
+          "nilai_mentah": -0.010101010101010102,
+          "kontribusi": 0.2560461205533276
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.01873515291934485,
-          "kontribusi": -0.8092490429196864
+          "nilai_mentah": 0.017911051527780785,
+          "kontribusi": -0.9048196523650734
         }
       ],
       "indikator_dominan": "volatilitas_90d",
-      "data_terakhir": "2026-08-24"
-    },
-    {
-      "symbol": "AALI.JK",
-      "nama": "Astra Agro Lestari Tbk",
-      "sektor": "Consumer Non-Cyclicals",
-      "papan": "Main",
-      "status": "dinilai",
-      "skor": 0.019252970596010166,
-      "persentil": 59.09090909090909,
-      "kategori": "Sedang",
-      "arah_30h": "stabil",
-      "delta_30h": 0.0,
-      "indikator": [
-        {
-          "nama": "lapor_jarak_hari",
-          "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "lapor_terlambat",
-          "label": "Status telat lapor",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "tanpa_pendapatan",
-          "label": "Tanpa pendapatan usaha",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "ekuitas_negatif",
-          "label": "Ekuitas negatif",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "utang_terhadap_aset",
-          "label": "Rasio utang terhadap aset",
-          "nilai_mentah": 0.1472229404829894,
-          "kontribusi": -1.2281075399515202
-        },
-        {
-          "nama": "ako_negatif_berturut",
-          "label": "Arus kas operasi negatif berturut-turut",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "hari_tanpa_transaksi_90d",
-          "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "rasio_volume_30_90",
-          "label": "Pengeringan volume",
-          "nilai_mentah": 0.9902939128467314,
-          "kontribusi": 0.10107259000503033
-        },
-        {
-          "nama": "hari_di_batas_bawah_90d",
-          "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "turun_dari_puncak_90d",
-          "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": 0.0,
-          "kontribusi": 0.37938029729901
-        },
-        {
-          "nama": "volatilitas_90d",
-          "label": "Volatilitas harga",
-          "nilai_mentah": 0.01591743445607263,
-          "kontribusi": -0.9354132969170701
-        }
-      ],
-      "indikator_dominan": "utang_terhadap_aset",
-      "data_terakhir": "2026-08-24"
-    },
-    {
-      "symbol": "ABBA.JK",
-      "nama": "Mahaka Media Tbk",
-      "sektor": "Consumer Cyclicals",
-      "papan": "Watchlist",
-      "status": "dinilai",
-      "skor": 0.16749562954012454,
-      "persentil": 100.0,
-      "kategori": "Sangat Tinggi",
-      "arah_30h": "stabil",
-      "delta_30h": 0.0,
-      "indikator": [
-        {
-          "nama": "lapor_jarak_hari",
-          "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 177,
-          "kontribusi": 2.485250608738542
-        },
-        {
-          "nama": "lapor_terlambat",
-          "label": "Status telat lapor",
-          "nilai_mentah": 1,
-          "kontribusi": 2.485250608738542
-        },
-        {
-          "nama": "tanpa_pendapatan",
-          "label": "Tanpa pendapatan usaha",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "ekuitas_negatif",
-          "label": "Ekuitas negatif",
-          "nilai_mentah": 1,
-          "kontribusi": 4.582575694955839
-        },
-        {
-          "nama": "utang_terhadap_aset",
-          "label": "Rasio utang terhadap aset",
-          "nilai_mentah": 1.4686061174977854,
-          "kontribusi": 2.750691730959838
-        },
-        {
-          "nama": "ako_negatif_berturut",
-          "label": "Arus kas operasi negatif berturut-turut",
-          "nilai_mentah": 1,
-          "kontribusi": 1.1081832770072813
-        },
-        {
-          "nama": "hari_tanpa_transaksi_90d",
-          "label": "Hari tanpa transaksi",
-          "nilai_mentah": 38.0,
-          "kontribusi": 4.558489436638603
-        },
-        {
-          "nama": "rasio_volume_30_90",
-          "label": "Pengeringan volume",
-          "nilai_mentah": 0.0,
-          "kontribusi": -2.416025798209464
-        },
-        {
-          "nama": "hari_di_batas_bawah_90d",
-          "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "turun_dari_puncak_90d",
-          "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.09090909090909091,
-          "kontribusi": -0.11400569540046007
-        },
-        {
-          "nama": "volatilitas_90d",
-          "label": "Volatilitas harga",
-          "nilai_mentah": 0.01437398936440173,
-          "kontribusi": -1.0045215492548303
-        }
-      ],
-      "indikator_dominan": "ekuitas_negatif",
-      "data_terakhir": "2026-08-24"
-    },
-    {
-      "symbol": "ABDA.JK",
-      "nama": "",
-      "sektor": "",
-      "papan": "Main",
-      "status": "tidak_dapat_dinilai",
-      "skor": -0.054907577337501345,
-      "persentil": 11.363636363636363,
-      "kategori": "Rendah",
-      "arah_30h": "stabil",
-      "delta_30h": 0.0,
-      "indikator": [
-        {
-          "nama": "lapor_jarak_hari",
-          "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "lapor_terlambat",
-          "label": "Status telat lapor",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "tanpa_pendapatan",
-          "label": "Tanpa pendapatan usaha",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "ekuitas_negatif",
-          "label": "Ekuitas negatif",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "utang_terhadap_aset",
-          "label": "Rasio utang terhadap aset",
-          "nilai_mentah": 0.3671755728203335,
-          "kontribusi": -0.5658111005826244
-        },
-        {
-          "nama": "ako_negatif_berturut",
-          "label": "Arus kas operasi negatif berturut-turut",
-          "nilai_mentah": 0,
-          "kontribusi": 0.0
-        },
-        {
-          "nama": "hari_tanpa_transaksi_90d",
-          "label": "Hari tanpa transaksi",
-          "nilai_mentah": null,
-          "kontribusi": null
-        },
-        {
-          "nama": "rasio_volume_30_90",
-          "label": "Pengeringan volume",
-          "nilai_mentah": null,
-          "kontribusi": null
-        },
-        {
-          "nama": "hari_di_batas_bawah_90d",
-          "label": "Hari menempel di batas bawah",
-          "nilai_mentah": null,
-          "kontribusi": null
-        },
-        {
-          "nama": "turun_dari_puncak_90d",
-          "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": null,
-          "kontribusi": null
-        },
-        {
-          "nama": "volatilitas_90d",
-          "label": "Volatilitas harga",
-          "nilai_mentah": null,
-          "kontribusi": null
-        }
-      ],
-      "indikator_dominan": "utang_terhadap_aset",
-      "data_terakhir": "2026-06-30"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "AMMN.JK",
@@ -350,8 +104,8 @@
       "sektor": "Basic Materials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": -0.06316565178836048,
-      "persentil": 4.545454545454546,
+      "skor": 0.0016645886054190706,
+      "persentil": 5.263157894736842,
       "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -359,14 +113,14 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 177,
-          "kontribusi": 2.485250608738542
+          "nilai_mentah": 175,
+          "kontribusi": 2.6692695630078274
         },
         {
           "nama": "lapor_terlambat",
           "label": "Status telat lapor",
           "nilai_mentah": 1,
-          "kontribusi": 2.485250608738542
+          "kontribusi": 2.6692695630078282
         },
         {
           "nama": "tanpa_pendapatan",
@@ -384,7 +138,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.6016250599211939,
-          "kontribusi": 0.14013662492864115
+          "kontribusi": 0.18346514843389078
         },
         {
           "nama": "ako_negatif_berturut",
@@ -395,36 +149,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.9505292492538097,
+          "nilai_mentah": 0.9381991278820586,
           "kontribusi": 0.0
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
           "nilai_mentah": 0.0,
-          "kontribusi": 0.37938029729901
+          "kontribusi": 0.30829336947704716
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.03729666142316298,
-          "kontribusi": 0.02184849360664642
+          "nilai_mentah": 0.037699873737867866,
+          "kontribusi": 0.0
         }
       ],
-      "indikator_dominan": "lapor_jarak_hari",
-      "data_terakhir": "2026-08-24"
+      "indikator_dominan": "lapor_terlambat",
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "ASII.JK",
@@ -432,16 +186,16 @@
       "sektor": "Industrials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": -0.014847402121816566,
-      "persentil": 31.818181818181817,
-      "kategori": "Rendah",
+      "skor": 0.04199754836454539,
+      "persentil": 57.89473684210527,
+      "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -466,7 +220,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.43666778745891777,
-          "kontribusi": -0.35656401938195403
+          "kontribusi": -0.4668092354543709
         },
         {
           "nama": "ako_negatif_berturut",
@@ -477,36 +231,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.9111315719830628,
-          "kontribusi": -0.10013979554061943
+          "nilai_mentah": 0.8979942276084766,
+          "kontribusi": -0.12164783155421911
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.06990291262135923,
-          "kontribusi": 0.0
+          "nilai_mentah": -0.07184466019417475,
+          "kontribusi": -0.06332152917845713
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.02021838175904249,
-          "kontribusi": -0.7428369927070677
+          "nilai_mentah": 0.02043402932820396,
+          "kontribusi": -0.7894595833287238
         }
       ],
       "indikator_dominan": "volatilitas_90d",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "BBCA.JK",
@@ -514,8 +268,8 @@
       "sektor": "Financials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.10686497079004798,
-      "persentil": 86.36363636363636,
+      "skor": 0.10419861835542399,
+      "persentil": 94.73684210526315,
       "kategori": "Tinggi",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -523,7 +277,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -548,47 +302,47 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.8307413268931585,
-          "kontribusi": 0.8300255623990305
+          "kontribusi": 1.086659273312773
         },
         {
           "nama": "ako_negatif_berturut",
           "label": "Arus kas operasi negatif berturut-turut",
           "nilai_mentah": 1,
-          "kontribusi": 1.1081832770072813
+          "kontribusi": 1.071284745859573
         },
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.7732979516103283,
-          "kontribusi": -0.4504810216970553
+          "nilai_mentah": 0.7762584480964556,
+          "kontribusi": -0.4899833702430332
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.019157088122605363,
-          "kontribusi": 0.2754100689523784
+          "nilai_mentah": -0.011494252873563218,
+          "kontribusi": 0.24883960346040077
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.021562032967333836,
-          "kontribusi": -0.6826745760084539
+          "nilai_mentah": 0.021759246695344226,
+          "kontribusi": -0.7288656427336743
         }
       ],
-      "indikator_dominan": "ako_negatif_berturut",
-      "data_terakhir": "2026-08-24"
+      "indikator_dominan": "utang_terhadap_aset",
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "BELI.JK",
@@ -596,8 +350,8 @@
       "sektor": "Technology",
       "papan": "New Economy",
       "status": "dinilai",
-      "skor": 0.14759890096553685,
-      "persentil": 95.45454545454545,
+      "skor": 0.10965447638070969,
+      "persentil": 100.0,
       "kategori": "Sangat Tinggi",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -605,7 +359,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -630,47 +384,47 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.5021004877521723,
-          "kontribusi": -0.15954048771514562
+          "kontribusi": -0.20886844730832593
         },
         {
           "nama": "ako_negatif_berturut",
           "label": "Arus kas operasi negatif berturut-turut",
           "nilai_mentah": 4,
-          "kontribusi": 4.432733108029125
+          "kontribusi": 4.285138983438292
         },
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.3956419492734355,
-          "kontribusi": 1.1313736712492608
+          "nilai_mentah": 1.3663913001145906,
+          "kontribusi": 1.295579615572503
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.14473684210526316,
-          "kontribusi": -0.40614213844619895
+          "nilai_mentah": -0.125,
+          "kontribusi": -0.3382663359539823
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.019691710751632924,
-          "kontribusi": -0.766418857118998
+          "nilai_mentah": 0.019688465429661992,
+          "kontribusi": -0.8235495792027998
         }
       ],
       "indikator_dominan": "ako_negatif_berturut",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "BRPT.JK",
@@ -678,8 +432,8 @@
       "sektor": "Basic Materials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": -0.03999555694217638,
-      "persentil": 22.727272727272727,
+      "skor": 0.025046403319683108,
+      "persentil": 34.21052631578947,
       "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -687,7 +441,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -712,7 +466,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.6573561800397006,
-          "kontribusi": 0.30794785784863254
+          "kontribusi": 0.4031615537969978
         },
         {
           "nama": "ako_negatif_berturut",
@@ -723,36 +477,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.9164218606664842,
-          "kontribusi": -0.0866931036590645
+          "nilai_mentah": 0.9233094286482426,
+          "kontribusi": -0.04505171289974344
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.046153846153846156,
-          "kontribusi": 0.12889202408235595
+          "nilai_mentah": -0.03076923076923077,
+          "kontribusi": 0.14914021121710144
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.043560862595036956,
-          "kontribusi": 0.3023301237057795
+          "nilai_mentah": 0.04395152068732764,
+          "kontribusi": 0.28584889790136087
         }
       ],
       "indikator_dominan": "utang_terhadap_aset",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "IMPC.JK",
@@ -760,16 +514,16 @@
       "sektor": "Industrials",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.03975887353666929,
-      "persentil": 63.63636363636363,
-      "kategori": "Sedang",
+      "skor": 0.017890092210767206,
+      "persentil": 26.31578947368421,
+      "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -794,7 +548,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.35901804581247626,
-          "kontribusi": -0.5903741214200984
+          "kontribusi": -0.7729105497796898
         },
         {
           "nama": "ako_negatif_berturut",
@@ -805,36 +559,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.8106589424639484,
-          "kontribusi": -0.35551801259462684
+          "nilai_mentah": 0.7959257779328278,
+          "kontribusi": -0.430475996495651
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.24089635854341737,
-          "kontribusi": -0.9280234816749359
+          "nilai_mentah": -0.226890756302521,
+          "kontribusi": -0.8652939950028046
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.03329407106343744,
-          "kontribusi": -0.15736878213404412
+          "nilai_mentah": 0.03359870447784778,
+          "kontribusi": -0.18752094009163206
         }
       ],
       "indikator_dominan": "turun_dari_puncak_90d",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "INET.JK",
@@ -842,23 +596,23 @@
       "sektor": "Infrastructures",
       "papan": "Development",
       "status": "dinilai",
-      "skor": 0.009940830851748794,
-      "persentil": 45.45454545454545,
-      "kategori": "Rendah",
+      "skor": 0.08203898878434146,
+      "persentil": 89.47368421052632,
+      "kategori": "Tinggi",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 177,
-          "kontribusi": 2.485250608738542
+          "nilai_mentah": 175,
+          "kontribusi": 2.6692695630078274
         },
         {
           "nama": "lapor_terlambat",
           "label": "Status telat lapor",
           "nilai_mentah": 1,
-          "kontribusi": 2.485250608738542
+          "kontribusi": 2.6692695630078282
         },
         {
           "nama": "tanpa_pendapatan",
@@ -876,7 +630,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.3440081102869194,
-          "kontribusi": -0.6355703382059303
+          "kontribusi": -0.8320808817716675
         },
         {
           "nama": "ako_negatif_berturut",
@@ -887,36 +641,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.3560452627815296,
-          "kontribusi": 1.0307280402356358
+          "nilai_mentah": 1.322996337947571,
+          "kontribusi": 1.1642796244750502
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
           "nilai_mentah": 0.0,
-          "kontribusi": 0.37938029729901
+          "kontribusi": 0.30829336947704716
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.05717046607390426,
-          "kontribusi": 0.9117045138346936
+          "nilai_mentah": 0.057787452544622725,
+          "kontribusi": 0.9184799317424341
         }
       ],
-      "indikator_dominan": "lapor_jarak_hari",
-      "data_terakhir": "2026-08-24"
+      "indikator_dominan": "lapor_terlambat",
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "LUCY.JK",
@@ -924,8 +678,8 @@
       "sektor": "Consumer Cyclicals",
       "papan": "Acceleration",
       "status": "dinilai",
-      "skor": 0.07919669419836384,
-      "persentil": 77.27272727272727,
+      "skor": 0.04863378604174651,
+      "persentil": 68.42105263157895,
       "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -933,7 +687,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -958,7 +712,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.6945285252077915,
-          "kontribusi": 0.41987701089490986
+          "kontribusi": 0.5496978264392968
         },
         {
           "nama": "ako_negatif_berturut",
@@ -969,36 +723,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 1.0,
-          "kontribusi": 0.11996024833259482
+          "nilai_mentah": 1,
+          "kontribusi": 0.6205925677408127
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.384308057208536,
-          "kontribusi": 1.1025655355244368
+          "nilai_mentah": 1.3680852735964824,
+          "kontribusi": 1.3007050654400627
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.8155688622754491,
-          "kontribusi": -4.046912482715038
+          "nilai_mentah": -0.8203592814371258,
+          "kontribusi": -3.9349966733517454
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.06621108635779438,
-          "kontribusi": 1.3165012061437
+          "nilai_mentah": 0.06631905147660057,
+          "kontribusi": 1.3085768408861973
         }
       ],
       "indikator_dominan": "turun_dari_puncak_90d",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "MDIA.JK",
@@ -1006,8 +760,8 @@
       "sektor": "Consumer Cyclicals",
       "papan": "Watchlist",
       "status": "dinilai",
-      "skor": 0.059374974725314944,
-      "persentil": 72.72727272727273,
+      "skor": 0.05856255984597292,
+      "persentil": 73.68421052631578,
       "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -1015,14 +769,14 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 177,
-          "kontribusi": 2.485250608738542
+          "nilai_mentah": 175,
+          "kontribusi": 2.6692695630078274
         },
         {
           "nama": "lapor_terlambat",
           "label": "Status telat lapor",
           "nilai_mentah": 1,
-          "kontribusi": 2.485250608738542
+          "kontribusi": 2.6692695630078282
         },
         {
           "nama": "tanpa_pendapatan",
@@ -1040,7 +794,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.7010927374541996,
-          "kontribusi": 0.43964242289229877
+          "kontribusi": 0.5755744611006816
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1051,36 +805,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 7.0,
-          "kontribusi": 0.8397217383281638
+          "nilai_mentah": 7,
+          "kontribusi": 4.344147974185689
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.388207597883296,
-          "kontribusi": 1.1124772672031655
+          "nilai_mentah": 1.3644565190867823,
+          "kontribusi": 1.2897255551230664
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.1,
-          "kontribusi": -0.1633442946704071
+          "nilai_mentah": 0.0,
+          "kontribusi": 0.30829336947704716
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.08842646224220625,
-          "kontribusi": 2.311201834422017
+          "nilai_mentah": 0.08714402761291569,
+          "kontribusi": 2.2607733621408435
         }
       ],
-      "indikator_dominan": "lapor_jarak_hari",
-      "data_terakhir": "2026-08-24"
+      "indikator_dominan": "hari_tanpa_transaksi_90d",
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "MGLV.JK",
@@ -1088,8 +842,8 @@
       "sektor": "Consumer Cyclicals",
       "papan": "Acceleration",
       "status": "dinilai",
-      "skor": -0.054907577337501345,
-      "persentil": 11.363636363636363,
+      "skor": 0.0026192675707233937,
+      "persentil": 10.526315789473683,
       "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -1097,7 +851,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1122,7 +876,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.37931104230205176,
-          "kontribusi": -0.5292701501861543
+          "kontribusi": -0.6929139810165688
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1133,36 +887,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.3840099789819302,
-          "kontribusi": 1.10180788952256
+          "nilai_mentah": 1.3567131869668576,
+          "kontribusi": 1.2662965811675726
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
           "nilai_mentah": 0.0,
-          "kontribusi": 0.37938029729901
+          "kontribusi": 0.30829336947704716
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.03747282547176342,
-          "kontribusi": 0.029736295763794177
+          "nilai_mentah": 0.03786264098086928,
+          "kontribusi": 0.007442332780870984
         }
       ],
       "indikator_dominan": "rasio_volume_30_90",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "MINA.JK",
@@ -1170,8 +924,8 @@
       "sektor": "Consumer Cyclicals",
       "papan": "Watchlist",
       "status": "dinilai",
-      "skor": -0.004495987269668156,
-      "persentil": 36.36363636363637,
+      "skor": 0.004652339071947287,
+      "persentil": 21.052631578947366,
       "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -1179,7 +933,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1204,7 +958,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.011984227354399482,
-          "kontribusi": -1.635323026386458
+          "kontribusi": -2.1409448238540523
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1215,36 +969,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.039161181084958,
-          "kontribusi": 0.2252818984973897
+          "nilai_mentah": 1.011460605276101,
+          "kontribusi": 0.22166700578286713
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
           "nilai_mentah": -0.059602649006622516,
-          "kontribusi": 0.05590206367485414
+          "kontribusi": 0.0
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.03653087107429754,
-          "kontribusi": -0.012440016527472756
+          "nilai_mentah": 0.036943569302336166,
+          "kontribusi": -0.03458109376975118
         }
       ],
       "indikator_dominan": "utang_terhadap_aset",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "MLPT.JK",
@@ -1252,16 +1006,16 @@
       "sektor": "Technology",
       "papan": "Development",
       "status": "dinilai",
-      "skor": 0.1081768198600147,
-      "persentil": 90.9090909090909,
-      "kategori": "Tinggi",
+      "skor": 0.059495961834665434,
+      "persentil": 78.94736842105263,
+      "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1286,7 +1040,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.8004112197753732,
-          "kontribusi": 0.7386989811423084
+          "kontribusi": 0.9670956346511721
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1297,36 +1051,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.5426246586493813,
-          "kontribusi": 1.5049697683938599
+          "nilai_mentah": 1.510521842585224,
+          "kontribusi": 1.7316749132346785
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.2935064935064935,
-          "kontribusi": -1.2135516219878504
+          "nilai_mentah": -0.2727272727272727,
+          "kontribusi": -1.1023823514633806
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.09317038894011101,
-          "kontribusi": 2.523612684072471
+          "nilai_mentah": 0.09397339194610387,
+          "kontribusi": 2.5730376796543903
         }
       ],
       "indikator_dominan": "volatilitas_90d",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "PACK.JK",
@@ -1334,16 +1088,16 @@
       "sektor": "Basic Materials",
       "papan": "Acceleration",
       "status": "dinilai",
-      "skor": -0.0004394654955013899,
-      "persentil": 40.909090909090914,
-      "kategori": "Rendah",
+      "skor": 0.04406392147706972,
+      "persentil": 63.1578947368421,
+      "kategori": "Sedang",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1368,7 +1122,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.01402932511684291,
-          "kontribusi": -1.6291650597741274
+          "kontribusi": -2.1328828895869933
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1379,36 +1133,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.3360452698856076,
-          "kontribusi": 0.9798926778956695
+          "nilai_mentah": 1.2986769481641172,
+          "kontribusi": 1.0906965285900214
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
           "nilai_mentah": 0.0,
-          "kontribusi": 0.37938029729901
+          "kontribusi": 0.30829336947704716
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.05058400461577887,
-          "kontribusi": 0.6167935753650298
+          "nilai_mentah": 0.04945399702091886,
+          "kontribusi": 0.5374428871974598
         }
       ],
       "indikator_dominan": "utang_terhadap_aset",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "SOHO.JK",
@@ -1416,8 +1170,8 @@
       "sektor": "Healthcare",
       "papan": "Development",
       "status": "dinilai",
-      "skor": -0.04423096030400242,
-      "persentil": 18.181818181818183,
+      "skor": 0.03356311101423559,
+      "persentil": 42.10526315789473,
       "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -1425,7 +1179,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1450,7 +1204,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.561232059443277,
-          "kontribusi": 0.01850979960872257
+          "kontribusi": 0.024232802341465586
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1461,36 +1215,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 1.1734679132563381,
-          "kontribusi": 0.5666585894871679
+          "nilai_mentah": 1.162138841678651,
+          "kontribusi": 0.6775736389558467
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.02834008097165992,
-          "kontribusi": 0.22557170848176628
+          "nilai_mentah": -0.032388663967611336,
+          "kontribusi": 0.1407637292034201
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.023328163070907754,
-          "kontribusi": -0.6035955303606637
+          "nilai_mentah": 0.023574045228193535,
+          "kontribusi": -0.6458862031201161
         }
       ],
-      "indikator_dominan": "volatilitas_90d",
-      "data_terakhir": "2026-08-24"
+      "indikator_dominan": "rasio_volume_30_90",
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "SRAJ.JK",
@@ -1498,16 +1252,16 @@
       "sektor": "Healthcare",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.05894360967853751,
-      "persentil": 68.18181818181817,
-      "kategori": "Sedang",
+      "skor": 0.004220293214226234,
+      "persentil": 15.789473684210526,
+      "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1532,7 +1286,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.8568416141481344,
-          "kontribusi": 0.908615789448298
+          "kontribusi": 1.1895486334524872
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1543,36 +1297,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 1.0,
-          "kontribusi": 0.11996024833259482
+          "nilai_mentah": 1,
+          "kontribusi": 0.6205925677408127
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.158090228825507,
-          "kontribusi": -2.0141969522406495
+          "nilai_mentah": 0.14673213311511182,
+          "kontribusi": -2.3947390244715443
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.11,
-          "kontribusi": -0.21761675386734877
+          "nilai_mentah": -0.06,
+          "kontribusi": -0.0020552891298469744
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.036808703052391735,
-          "kontribusi": 0.0
+          "nilai_mentah": 0.03614973654402325,
+          "kontribusi": -0.07087812412290513
         }
       ],
       "indikator_dominan": "rasio_volume_30_90",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "TLKM.JK",
@@ -1580,16 +1334,16 @@
       "sektor": "Infrastructures",
       "papan": "Main",
       "status": "dinilai",
-      "skor": 0.014383672379333912,
-      "persentil": 50.0,
-      "kategori": "Sedang",
+      "skor": 0.03987652098608829,
+      "persentil": 47.368421052631575,
+      "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1625,36 +1379,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.7924185538784546,
-          "kontribusi": -0.40188086721116184
+          "nilai_mentah": 0.8052165793648327,
+          "kontribusi": -0.40236484984652304
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.11486486486486487,
-          "kontribusi": -0.2440195718550502
+          "nilai_mentah": -0.11824324324324324,
+          "kontribusi": -0.3033171626874402
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.023840164384041913,
-          "kontribusi": -0.5806705062465667
+          "nilai_mentah": 0.02408198179658105,
+          "kontribusi": -0.6226614258012503
         }
       ],
       "indikator_dominan": "volatilitas_90d",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "TPIA.JK",
@@ -1662,16 +1416,16 @@
       "sektor": "Basic Materials",
       "papan": "Development",
       "status": "dinilai",
-      "skor": 0.01842344696842646,
-      "persentil": 54.54545454545454,
-      "kategori": "Sedang",
+      "skor": 0.025046403319683108,
+      "persentil": 34.21052631578947,
+      "kategori": "Rendah",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
       "indikator": [
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1696,7 +1450,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.6393818682625839,
-          "kontribusi": 0.2538256472454286
+          "kontribusi": 0.33230542031338267
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1707,36 +1461,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.9467983717183793,
-          "kontribusi": -0.009483028936390935
+          "nilai_mentah": 0.9306105115723584,
+          "kontribusi": -0.022960850848785443
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.12719298245614036,
-          "kontribusi": -0.31092729774981
+          "nilai_mentah": -0.10964912280701754,
+          "kontribusi": -0.2588642668659611
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.04296578917744742,
-          "kontribusi": 0.27568551929179913
+          "nilai_mentah": 0.043333040097316235,
+          "kontribusi": 0.2575696306206932
         }
       ],
-      "indikator_dominan": "turun_dari_puncak_90d",
-      "data_terakhir": "2026-08-24"
+      "indikator_dominan": "utang_terhadap_aset",
+      "data_terakhir": "2026-08-21"
     },
     {
       "symbol": "UDNG.JK",
@@ -1744,8 +1498,8 @@
       "sektor": "Consumer Non-Cyclicals",
       "papan": "Acceleration",
       "status": "dinilai",
-      "skor": 0.0918498798493379,
-      "persentil": 81.81818181818183,
+      "skor": 0.06390081120047963,
+      "persentil": 84.21052631578947,
       "kategori": "Tinggi",
       "arah_30h": "stabil",
       "delta_30h": 0.0,
@@ -1753,7 +1507,7 @@
         {
           "nama": "lapor_jarak_hari",
           "label": "Keterlambatan laporan keuangan",
-          "nilai_mentah": 86,
+          "nilai_mentah": 84,
           "kontribusi": 0.0
         },
         {
@@ -1778,7 +1532,7 @@
           "nama": "utang_terhadap_aset",
           "label": "Rasio utang terhadap aset",
           "nilai_mentah": 0.12610710883588683,
-          "kontribusi": -1.2916891391602998
+          "kontribusi": -1.6910635586318805
         },
         {
           "nama": "ako_negatif_berturut",
@@ -1789,36 +1543,36 @@
         {
           "nama": "hari_tanpa_transaksi_90d",
           "label": "Hari tanpa transaksi",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "rasio_volume_30_90",
           "label": "Pengeringan volume",
-          "nilai_mentah": 0.7914946928195634,
-          "kontribusi": -0.4042291086292923
+          "nilai_mentah": 0.7593459016712387,
+          "kontribusi": -0.5411556050872409
         },
         {
           "nama": "hari_di_batas_bawah_90d",
           "label": "Hari menempel di batas bawah",
-          "nilai_mentah": 0.0,
+          "nilai_mentah": 0,
           "kontribusi": 0.0
         },
         {
           "nama": "turun_dari_puncak_90d",
           "label": "Penurunan dari puncak 90 hari",
-          "nilai_mentah": -0.2986666666666667,
-          "kontribusi": -1.2415571507163157
+          "nilai_mentah": -0.2826666666666667,
+          "kontribusi": -1.1537936444043209
         },
         {
           "nama": "volatilitas_90d",
           "label": "Volatilitas harga",
-          "nilai_mentah": 0.05537528969957301,
-          "kontribusi": 0.8313249120350837
+          "nilai_mentah": 0.05593252411792696,
+          "kontribusi": 0.8336656018956873
         }
       ],
       "indikator_dominan": "utang_terhadap_aset",
-      "data_terakhir": "2026-08-24"
+      "data_terakhir": "2026-08-21"
     }
   ]
 }

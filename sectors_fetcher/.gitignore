@@ -1,4 +1,7 @@
 .env
 __pycache__/
 /sql
-/storage
+# storage/ TIDAK di-gitignore lagi -- supabase_client.py (jalur BACA)
+# sekarang sumber kode nyata, dipakai api/. Kalau nanti menambahkan
+# save_*.py (jalur TULIS) di sini, itu juga kode sumber, bukan data --
+# jangan tambahkan baris "/storage" balik ke sini.

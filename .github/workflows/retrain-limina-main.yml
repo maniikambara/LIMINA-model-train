@@ -1,17 +1,17 @@
 name: Perbarui model LIMINA (arsip notebooks/01-05)
 
-# Pipeline ARSIP (limina/ + notebooks/, dari branch main): jalan otomatis
-# setiap hari jam 22:00 UTC (05:00 WIB keesokan harinya), dan bisa dipicu
-# manual dari tab Actions ("Run workflow") kapan saja. Ubah jadwal cron
-# di bawah kalau ingin frekuensi mingguan, mis. "0 22 * * 1" untuk setiap
-# Senin saja.
+# NONAKTIF sementara -- hanya retrain-random-forest.yml yang jalan
+# otomatis untuk saat ini. Jadwal cron di bawah sengaja dilepas supaya
+# workflow ini TIDAK jalan sendiri; masih bisa dipicu manual lewat tab
+# Actions -> workflow ini -> "Run workflow" kalau perlu. Untuk
+# mengaktifkan lagi jadwal hariannya, kembalikan blok schedule:
+#   schedule:
+#     - cron: "0 22 * * *"
 #
 # Pipeline PRODUKSI ada di retrain-random-forest.yml
 # (sectors_fetcher/ + preprocessing/notebook/) -- lihat README bagian
 # "Dua pipeline" untuk status masing-masing.
 on:
-  schedule:
-    - cron: "0 22 * * *"
   workflow_dispatch: {}
 
 permissions:

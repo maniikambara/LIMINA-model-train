@@ -7,15 +7,16 @@ name: Fetch Sectors API -> Supabase
 # tabel yang nantinya dibaca oleh kedua pipeline latih
 # (retrain-random-forest.yml dan retrain-limina-main.yml).
 #
-# CATATAN PENTING: per README docs/README-pipeline-random-forest.md
-# bagian "Keterbatasan yang Diketahui", folder `sectors_fetcher/storage/`
-# (implementasi SupabaseStorage + save_*.py per tabel) TIDAK ada di
-# checkout/zip proyek ini. `sectors_fetcher/main.py` mengimpor langsung
-# dari `.storage.*`, jadi job ini akan GAGAL di langkah "Jalankan fetch"
-# sampai folder tersebut ditambahkan ke repo (atau main.py disesuaikan
-# ke implementasi storage yang tersedia). Job tetap disiapkan di sini
-# sesuai permintaan; jangan aktifkan jadwalnya sebelum storage/ lengkap,
-# supaya tidak gagal setiap hari secara diam-diam.
+# CATATAN PENTING: sectors_fetcher/main.py mengimpor enam modul
+# storage/save_*.py (satu per tabel: save_quarterly_financials,
+# save_daily_transaction, save_free_float, save_full_universe_close,
+# save_suspensions, save_company_overview) selain SupabaseStorage.
+# Baru SupabaseStorage (jalur BACA, dipakai api/ lewat AMBAScoringService)
+# yang sudah dibuat di sectors_fetcher/storage/supabase_client.py -- keenam
+# save_*.py itu (jalur TULIS) BELUM ada, jadi job ini akan tetap GAGAL di
+# langkah "Jalankan fetch" sampai keenamnya ditambahkan. Job tetap
+# disiapkan di sini sesuai permintaan; jangan aktifkan jadwalnya sebelum
+# itu lengkap, supaya tidak gagal setiap hari secara diam-diam.
 on:
   schedule:
     # Nonaktif secara default -- baris cron di bawah dikomentari sampai

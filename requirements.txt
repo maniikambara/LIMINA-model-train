@@ -17,6 +17,10 @@ tabulate>=0.9
 pytest>=8.0
 jupyter>=1.0
 
+# Hanya dipakai api/ (FastAPI, lihat docs/PANDUAN-FASTAPI.md)
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+
 # Hanya dipakai sectors_fetcher/ + preprocessing/notebook/ (produksi)
 requests>=2.32.0
 httpx>=0.28.0

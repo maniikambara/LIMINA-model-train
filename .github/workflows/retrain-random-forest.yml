@@ -3,10 +3,11 @@ name: Retrain AMBA - Random Forest (produksi)
 # Pipeline PRODUKSI (feature-random-forest): jalur BACA penuh --
 # preprocessing/notebook/01_ambil_data.ipynb ->
 # eda_and_feature_engineering.ipynb -> modeling_and_evaluation.ipynb,
-# lalu mengunggah output/ (scores.json, backtest.json, model .joblib)
-# sebagai artifact GitHub Actions -- BUKAN di-commit balik ke repo,
-# supaya konsisten dengan .gitignore proyek ini (output/ sengaja
-# dikecualikan dari git).
+# lalu meng-COMMIT BALIK output/ (dataset, scores.json, backtest.json,
+# model *.joblib) beserta ketiga notebook yang baru dieksekusi (sel
+# output -- metrik, plot -- ikut ter-commit), plus tetap mengunggahnya
+# sebagai artifact GitHub Actions untuk diagnosis cepat kalau ada
+# langkah yang gagal.
 #
 # `python -m sectors_fetcher.main` (fetch Sectors API -> Supabase) TIDAK
 # dijalankan di sini -- lihat workflow terpisah
@@ -24,7 +25,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   retrain:
@@ -87,10 +88,28 @@ jobs:
             --ExecutePreprocessor.timeout=1200 \
             preprocessing/notebook/modeling_and_evaluation.ipynb
 
+      # Commit HANYA kalau ketiga notebook di atas sukses (langkah ini
+      # tidak punya if: always(), beda dari langkah unggah artifact di
+      # bawah) -- supaya output/ yang ter-commit ke branch main selalu
+      # dari siklus retrain yang selesai penuh, bukan hasil setengah jalan.
+      - name: Commit output (model terlatih + dataset + skor)
+        run: |
+          git config user.name "limina-bot"
+          git config user.email "limina-bot@users.noreply.github.com"
+          git add output/
+          git add preprocessing/notebook/01_ambil_data.ipynb \
+                  preprocessing/notebook/eda_and_feature_engineering.ipynb \
+                  preprocessing/notebook/modeling_and_evaluation.ipynb
+          git diff --staged --quiet || git commit -m "Perbarui model dan output pipeline produksi ($(date -u +%Y-%m-%d))"
+          git push
+
       # if: always() -- tetap unggah apa pun yang sempat dihasilkan
       # (termasuk notebook dengan traceback error di sel terakhirnya)
       # walaupun salah satu langkah di atas gagal, supaya gampang didiagnosis
-      # dari tab Actions tanpa perlu akses lokal ke runner.
+      # dari tab Actions tanpa perlu akses lokal ke runner. Ini pelengkap,
+      # bukan lagi jalur persistensi utama -- output/ dan ketiga notebook
+      # yang berhasil dieksekusi penuh sudah ter-commit ke branch main
+      # lewat langkah "Commit output" di atas.
       - name: Unggah artefak (notebook hasil eksekusi + output/)
         if: always()
         uses: actions/upload-artifact@v4

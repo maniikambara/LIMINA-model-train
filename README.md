@@ -24,7 +24,7 @@ ada berkas yang dihapus saat digabung -- keduanya berjalan berdampingan:
 | Status | **Berhasil melatih model** -- dipakai sebagai acuan utama | Bug diketahui: `data_complete==1` bisa kosong (lihat `notebooks/03_pelatihan_model.ipynb`), watchlist 12 emiten blue-chip nyaris tidak beririsan dengan emiten yang pernah suspensi |
 | Kode | `sectors_fetcher/`, `preprocessing/notebook/` | `limina/`, `notebooks/`, `tests/` |
 | Model | Logistic Regression + **Random Forest** (`BalancedRandomForestClassifier`, tuning 2 tahap), model dengan Average Precision CV tertinggi dipilih otomatis | Logistic Regression (utama) vs. gradient boosting (pembanding), plus rule-based/Isolation Forest sebagai fallback |
-| Keluaran | `output/` (gitignored, diunggah sebagai artifact CI) | `artifacts/` (sebagian di-commit balik lewat CI dengan `git add -f`) |
+| Keluaran | `output/` (di-commit balik lewat CI, lihat `retrain-random-forest.yml`) | `artifacts/` (sebagian di-commit balik lewat CI dengan `git add -f`) |
 | Workflow | `.github/workflows/retrain-random-forest.yml` | `.github/workflows/retrain-limina-main.yml` |
 | Dokumentasi asli | `docs/README-pipeline-random-forest.md` (README lengkap branch ini) | Bagian di bawah pada README ini |
 
@@ -50,21 +50,27 @@ LIMINA/
     01_ambil_data.ipynb                     unduh 6 tabel Supabase (baca saja) -> data/raw/
     eda_and_feature_engineering.ipynb       audit data, taksonomi suspensi, feature engineering PIT
     modeling_and_evaluation.ipynb           Logistic Regression + Random Forest + tuning, evaluasi
-  output/                                 keluaran pipeline produksi (gitignored): dataset, scores.json,
-                                           backtest.json, model *.joblib
+  output/                                 keluaran pipeline produksi (DI-COMMIT tiap retrain): dataset,
+                                           scores.json, backtest.json, model *.joblib
 
   limina/                                 pipeline ARSIP -- kode inti dipakai notebooks/ + tests/
   notebooks/                              pipeline ARSIP -- notebook 01-05 (lihat README lama di bawah)
-  tests/                                  pengujian unit (pytest) untuk limina/
+  tests/                                  pengujian unit (pytest) untuk limina/ + test_api.py untuk api/
   data/labels/taksonomi_alasan_suspensi.json  taksonomi alasan suspensi (A/B/C), dipakai kedua pipeline
   artifacts/                              keluaran pipeline arsip: model terlatih, scores.json, backtest.json
 
+  api/                                    FastAPI di atas AMBAScoringService -- lihat docs/PANDUAN-FASTAPI.md
+    main.py, dependencies.py, schemas.py    app, singleton service, response model
+    routers/scores.py                       GET /scores, GET /scores/{symbol}
+  Dockerfile                              image untuk api/ (lihat docs/PANDUAN-FASTAPI.md Bagian 5 soal model file)
+
   docs/README-pipeline-random-forest.md   README asli lengkap pipeline produksi (feature-random-forest)
+  docs/PANDUAN-FASTAPI.md                 cara menjalankan/deploy api/
   .github/workflows/
-    retrain-random-forest.yml               jadwal retrain pipeline produksi
-    retrain-limina-main.yml                 jadwal retrain pipeline arsip
-    fetch-sectors-to-supabase.yml           jalur TULIS: Sectors API -> Supabase (lihat catatan di bawah)
-    lint.yml                                cek sintaks Python + notebook di tiap push/PR (tidak butuh secrets)
+    retrain-random-forest.yml               satu-satunya yang aktif otomatis (jadwal harian)
+    retrain-limina-main.yml                 nonaktif -- trigger otomatis dilepas, manual saja (workflow_dispatch)
+    fetch-sectors-to-supabase.yml           nonaktif -- jalur TULIS Sectors API -> Supabase, lihat catatan di dalamnya
+    lint.yml                                nonaktif -- trigger push/PR dilepas, manual saja (workflow_dispatch)
 ```
 
 ## 1. Persiapan
@@ -118,35 +124,40 @@ Enam tabel, dibaca apa adanya oleh kedua pipeline:
 Nama tabel/kolom pipeline arsip diatur di `limina/config.py`; pipeline
 produksi di `sectors_fetcher/config.py`.
 
-## 2. GitHub Actions (4 workflow)
+## 2. GitHub Actions (4 workflow, 1 aktif)
 
-Tiga workflow inti sesuai permintaan penggabungan proyek ini, plus satu
-workflow lint yang sudah ada sebelumnya di branch `feature-random-forest`
-dan dipertahankan (tidak dihapus):
+Hanya **`retrain-random-forest.yml`** yang jalan otomatis untuk sekarang;
+tiga lainnya trigger otomatisnya sengaja dilepas (`schedule`/`push`/
+`pull_request` dihapus dari `on:`), tersisa `workflow_dispatch` saja
+(bisa dipicu manual dari tab Actions). Untuk mengaktifkan lagi salah
+satunya, kembalikan trigger yang dikomentari/disebut di bagian atas
+masing-masing berkas.
 
-1. **`retrain-random-forest.yml`** (pipeline produksi) -- menjalankan
-   ulang `preprocessing/notebook/01_ambil_data.ipynb` ->
+1. **`retrain-random-forest.yml`** (pipeline produksi, **AKTIF**) --
+   menjalankan ulang `preprocessing/notebook/01_ambil_data.ipynb` ->
    `eda_and_feature_engineering.ipynb` -> `modeling_and_evaluation.ipynb`
-   setiap hari 15:00 UTC, mengunggah `output/` sebagai artifact CI (tidak
-   di-commit balik, konsisten dengan `.gitignore`). Butuh secrets
-   `SECTORS_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`.
-2. **`retrain-limina-main.yml`** (pipeline arsip) -- menjalankan ulang
-   `notebooks/01`-`05` setiap hari 22:00 UTC, meng-commit balik
-   `artifacts/scores.json`, `artifacts/backtest.json`,
+   setiap hari 15:00 UTC, lalu **commit balik** seluruh `output/`
+   (dataset, `scores.json`, `backtest.json`, model `*.joblib`) plus
+   ketiga notebook yang baru dieksekusi ke branch `main` -- hanya kalau
+   ketiga notebook sukses penuh -- dan tetap mengunggah semuanya sebagai
+   artifact CI untuk diagnosis. Butuh secrets `SUPABASE_URL`,
+   `SUPABASE_KEY` (bukan `SECTORS_API_KEY` -- ketiga notebook di atas
+   cuma baca tabel Supabase yang sudah ada).
+2. **`retrain-limina-main.yml`** (pipeline arsip, nonaktif) -- kalau
+   diaktifkan lagi: menjalankan ulang `notebooks/01`-`05`, meng-commit
+   balik `artifacts/scores.json`, `artifacts/backtest.json`,
    `artifacts/ringkasan_evaluasi.md`, `artifacts/riwayat_skor.csv`. Butuh
    secrets `SUPABASE_URL`, `SUPABASE_KEY`.
-3. **`fetch-sectors-to-supabase.yml`** (baru) -- jalur TULIS, mengambil
-   data mentah dari Sectors API lalu menyimpannya ke Supabase lewat
-   `python -m sectors_fetcher.main`. **Jadwalnya sengaja dinonaktifkan**
-   (lihat komentar di dalam berkasnya): `sectors_fetcher/main.py`
-   mengimpor `sectors_fetcher/storage/`, folder yang menurut
-   `docs/README-pipeline-random-forest.md` (bagian Keterbatasan) memang
-   belum ada di checkout ini, jadi job ini akan gagal sampai folder
-   tersebut ditambahkan. Bisa dipicu manual (`workflow_dispatch`) untuk
-   dites begitu `storage/` sudah lengkap.
-4. **`lint.yml`** -- cek sintaks seluruh modul Python (`sectors_fetcher/`)
-   dan sel kode notebook (`preprocessing/notebook/`) di tiap push/PR,
-   tidak butuh secrets.
+3. **`fetch-sectors-to-supabase.yml`** (jalur TULIS, nonaktif) --
+   mengambil data mentah dari Sectors API lalu menyimpannya ke Supabase
+   lewat `python -m sectors_fetcher.main`. **Masih akan gagal** kalau
+   dipicu: `sectors_fetcher/storage/supabase_client.py` (jalur BACA)
+   sudah ada, tapi `main.py` juga butuh enam modul
+   `storage/save_*.py` (jalur TULIS, satu per tabel) yang belum dibuat --
+   lihat komentar di `sectors_fetcher/storage/__init__.py`.
+4. **`lint.yml`** (nonaktif) -- cek sintaks seluruh modul Python
+   (`sectors_fetcher/`, `api/`) dan sel kode notebook
+   (`preprocessing/notebook/`), tidak butuh secrets.
 
 Secrets diisi di Settings > Secrets and variables > Actions:
 `SECTORS_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY`.
@@ -185,10 +196,28 @@ Precision CV, `StratifiedGroupKFold` per-symbol, dan bagian Keterbatasan
 soal `sectors_fetcher/storage/`, `sql/schema.sql`, dan duplikasi logika
 `features/*.py` vs. `service.py`).
 
-## 5. Keterbatasan gabungan yang diketahui
+## 5. FastAPI (`api/`)
 
-- `sectors_fetcher/storage/` dan `sql/schema.sql` tidak ada di checkout
-  ini -- lihat catatan di workflow `fetch-sectors-to-supabase.yml`.
+Membungkus `AMBAScoringService` (`sectors_fetcher/service.py`) jadi
+endpoint HTTP -- `GET /scores`, `GET /scores/{symbol}`, `GET /health`.
+Panduan lengkap (cara jalan lokal, Dockerfile, isu model file saat
+deploy) ada di `docs/PANDUAN-FASTAPI.md`. Jalankan lokal:
+
+```
+export SUPABASE_URL=...
+export SUPABASE_KEY=...
+uvicorn api.main:app --reload --port 8000
+```
+
+Lalu buka `http://localhost:8000/docs`.
+
+## 6. Keterbatasan gabungan yang diketahui
+
+- `sectors_fetcher/storage/supabase_client.py` (jalur BACA) sudah ada,
+  dipakai `api/` dan `AMBAScoringService`. Enam modul
+  `storage/save_*.py` (jalur TULIS, satu per tabel, dipanggil
+  `sectors_fetcher/main.py`/`fetch-sectors-to-supabase.yml`) dan
+  `sql/schema.sql` masih belum ada di checkout ini.
 - `docs/rancangan/` (dirujuk README asli branch `main`) dan
   `docs/AMBA-dokumentasi-variabel-dan-pemodelan.md` /
   `docs/AMBANG-panduan-api-sectors.md` (dirujuk README asli branch

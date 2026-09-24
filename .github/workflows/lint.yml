@@ -1,14 +1,15 @@
 name: Lint & Cek Sintaks
 
-# Jalan di setiap push/PR -- TIDAK butuh secrets, jadi aman dijalankan
-# kapan saja (fork/PR eksternal termasuk). Tujuannya menangkap error
-# sintaks/import sebelum job "retrain" (yang butuh kredensial dan kuota
-# API) sempat dijalankan sia-sia.
+# NONAKTIF sementara -- hanya retrain-random-forest.yml yang jalan
+# otomatis untuk saat ini. Trigger push/pull_request sengaja dilepas;
+# masih bisa dipicu manual lewat tab Actions -> workflow ini -> "Run
+# workflow". Untuk mengaktifkan lagi supaya jalan di tiap push/PR,
+# kembalikan dua trigger ini:
+#   push:
+#     branches: ["**"]
+#   pull_request:
+#     branches: ["**"]
 on:
-  push:
-    branches: ["**"]
-  pull_request:
-    branches: ["**"]
   workflow_dispatch: {}
 
 concurrency:
@@ -62,11 +63,12 @@ jobs:
           sys.exit(1 if gagal else 0)
           PY
 
-      # features/pipeline.py dan main.py SENGAJA tidak diimpor di sini --
-      # keduanya butuh sectors_fetcher/storage/, yang menurut README belum
-      # ada di checkout ini (lihat bagian Keterbatasan). service.py dites di
-      # sini justru untuk memastikan klaim README "sudah dibuat toleran"
-      # (import ditunda, tidak crash tanpa storage/) tetap benar.
+      # sectors_fetcher/storage/supabase_client.py (jalur BACA, dipakai
+      # AMBAScoringService lewat api/) sudah ada dan diimpor di bawah.
+      # main.py TIDAK diimpor di sini -- dia butuh enam modul
+      # storage/save_*.py (jalur TULIS, dipanggil fetch-sectors-to-supabase.yml)
+      # yang masih belum dibuat (lihat storage/__init__.py). features/pipeline.py
+      # sama, belum diimpor karena belum ada di checkout ini.
       - name: Import cepat sectors_fetcher (tanpa kredensial)
         run: |
           python -c "
@@ -74,5 +76,13 @@ jobs:
           from sectors_fetcher import config, client, supabase_io, service
           from sectors_fetcher.risk_scorer_fallback import SkorAnomaliMahalanobis
           from sectors_fetcher.features import compliance, financial_health, liquidity_price, ownership
+          from sectors_fetcher.storage.supabase_client import SupabaseStorage
           print('Import sectors_fetcher OK, DEFAULT_TICKERS:', len(config.DEFAULT_TICKERS), 'simbol')
+          "
+
+      - name: Import cepat api/ (tanpa kredensial)
+        run: |
+          python -c "
+          from api.main import app
+          print('Import api.main OK, routes:', [r.path for r in app.routes])
           "
