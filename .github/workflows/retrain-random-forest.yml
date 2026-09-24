@@ -31,7 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      SECTORS_API_KEY: ${{ secrets.SECTORS_API_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
     steps:
@@ -45,10 +44,16 @@ jobs:
       - name: Instal dependensi
         run: pip install -r requirements.txt
 
+      # Hanya SUPABASE_URL/SUPABASE_KEY -- ketiga notebook di bawah cuma
+      # membaca tabel yang sudah ada di Supabase (01_ambil_data.ipynb
+      # mengecek config.kredensial_lengkap(), yang hanya menguji dua
+      # variabel ini). SECTORS_API_KEY cuma dipakai kalau memanggil
+      # sectors_fetcher.main langsung, itu ada di
+      # fetch-sectors-to-supabase.yml, bukan di sini.
       - name: Cek secrets tersedia
         run: |
           missing=0
-          for v in SECTORS_API_KEY SUPABASE_URL SUPABASE_KEY; do
+          for v in SUPABASE_URL SUPABASE_KEY; do
             if [ -z "${!v}" ]; then
               echo "::error::Secret $v belum diset (Settings -> Secrets and variables -> Actions)."
               missing=1
