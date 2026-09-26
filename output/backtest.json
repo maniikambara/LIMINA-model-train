@@ -1,48 +1,48 @@
 {
-  "generated_at": "2026-09-22T13:15:16.527554",
-  "model_selected": "Logistic Regression (Balanced)",
+  "generated_at": "2026-09-26T10:23:07.835794",
+  "model_selected": "Baseline Logistic Regression",
   "metrics": {
-    "auc": 0.7602,
-    "average_precision": 0.2897,
-    "precision": 0.3438,
-    "recall": 0.6875,
-    "f1_score": 0.4583,
+    "auc": 0.9159,
+    "average_precision": 0.4921,
+    "precision": 0.5484,
+    "recall": 0.6071,
+    "f1_score": 0.5763,
     "precision_at_20": 0.0,
-    "recall_90h": 0.6875,
-    "alarm_palsu": 21,
-    "ambang_keputusan": 0.5057,
-    "akurasi_internal_only": 0.7719
+    "recall_90h": 0.6071,
+    "alarm_palsu": 14,
+    "ambang_keputusan": 0.2389,
+    "akurasi_internal_only": 0.9561
   },
   "comparison_table": [
     {
       "Model": "Baseline Logistic Regression",
-      "ROC-AUC": 0.572099634112018,
-      "Avg Precision": 0.2627977252185386,
-      "Precision@Top20%": 0.391304347826087,
-      "Precision": 0.2,
-      "Recall": 0.04,
-      "F1-Score": 0.06666666666666667,
-      "Accuracy": 0.7807017543859649
+      "ROC-AUC": 0.9409912337060502,
+      "Avg Precision": 0.4920868332938266,
+      "Precision@Top20%": 0.20175438596491227,
+      "Precision": 0.325,
+      "Recall": 0.24,
+      "F1-Score": 0.22051282051282053,
+      "Accuracy": 0.956140350877193
     },
     {
       "Model": "Logistic Regression (Balanced)",
-      "ROC-AUC": 0.7347889107796229,
-      "Avg Precision": 0.28974600322374056,
-      "Precision@Top20%": 0.34782608695652173,
-      "Precision": 0.22454212454212455,
-      "Recall": 0.8,
-      "F1-Score": 0.3377777777777778,
-      "Accuracy": 0.6228070175438597
+      "ROC-AUC": 0.928364008807,
+      "Avg Precision": 0.45355851100628086,
+      "Precision@Top20%": 0.19298245614035087,
+      "Precision": 0.22245614035087719,
+      "Recall": 0.7647619047619048,
+      "F1-Score": 0.33717797145383355,
+      "Accuracy": 0.8666666666666667
     },
     {
       "Model": "Random Forest (Balanced Bootstrap)",
-      "ROC-AUC": 0.6683415423585701,
-      "Avg Precision": 0.2722555526135253,
-      "Precision@Top20%": 0.30434782608695654,
-      "Precision": 0.19494949494949493,
-      "Recall": 0.48,
-      "F1-Score": 0.23555555555555557,
-      "Accuracy": 0.7543859649122807
+      "ROC-AUC": 0.8900147594398395,
+      "Avg Precision": 0.3384725494398998,
+      "Precision@Top20%": 0.16666666666666666,
+      "Precision": 0.1497702589807853,
+      "Recall": 0.9333333333333332,
+      "F1-Score": 0.25373656015629925,
+      "Accuracy": 0.7228070175438597
     }
   ]
 }
