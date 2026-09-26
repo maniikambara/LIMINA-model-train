@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-26T10:23:07.835794",
+  "generated_at": "2026-09-26T18:12:59.550633",
   "model_selected": "Baseline Logistic Regression",
   "metrics": {
     "auc": 0.9159,
