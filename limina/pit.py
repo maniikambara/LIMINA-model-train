@@ -2,7 +2,7 @@
 pit.py -- Pemeriksa point-in-time
 ====================================
 
-Aturan yang menentukan sah tidaknya seluruh hasil (AMBANG-konsep-dan-
+Aturan yang menentukan sah tidaknya seluruh hasil (LIMINA-konsep-dan-
 rancangan.md 7.5): untuk sampel bertanggal peristiwa T, tidak boleh ada
 indikator yang memakai data yang baru tersedia setelah T-30 hari.
 

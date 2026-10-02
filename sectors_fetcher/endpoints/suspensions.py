@@ -9,7 +9,7 @@ Sumber: Sectors API v2 GET /v2/suspensions/
 Field mentah yang dikembalikan API (per baris):
     symbol, event_date, reason, pdf_url
 
-PENTING soal kepemilikan (lihat AMBA Kamus Variabel bagian 9):
+PENTING soal kepemilikan (lihat LIMINA Kamus Variabel bagian 9):
     Modul ini HANYA menarik data mentah suspensi (symbol, event_date,
     reason, pdf_url) apa adanya dari API. Modul ini TIDAK melakukan
     klasifikasi taksonomi A/B/C, dan TIDAK menghitung `is_event_90d`.

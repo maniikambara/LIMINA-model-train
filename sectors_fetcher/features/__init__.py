@@ -1,5 +1,5 @@
 """
-Variabel turunan (section 3 AMBA Kamus Variabel).
+Variabel turunan (section 3 LIMINA Kamus Variabel).
 
 Satu file per kelompok indikator. Setiap fungsi compute_* menerima data
 mentah (list of dict / pandas.DataFrame) yang SUDAH difetch dan disimpan

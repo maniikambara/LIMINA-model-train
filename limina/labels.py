@@ -2,7 +2,7 @@
 labels.py -- Pengelompokan alasan suspensi, pembentukan label
 =================================================================
 
-Definisi (AMBANG-konsep-dan-rancangan.md 7.3): A = sukarela/aksi
+Definisi (LIMINA-konsep-dan-rancangan.md 7.3): A = sukarela/aksi
 korporasi (dibuang), B = teknis jangka pendek (dibuang dari label utama,
 disimpan sebagai pembanding), C = kepatuhan/distress (label positif).
 Hanya C jadi is_event_90d=1. Pemetaan alasan->kategori ada di

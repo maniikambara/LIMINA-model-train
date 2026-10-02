@@ -3,11 +3,11 @@ artifacts_io.py -- Penulis scores.json dan backtest.json
 ============================================================
 
 Dua berkas ini adalah kontrak keluaran produk, strukturnya mengikuti
-docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 8.
+docs/rancangan/LIMINA-peran-model-dan-evaluasi.md bagian 8.
 
 skor TIDAK PERNAH ditulis sebagai probabilitas ke berkas ini. Field yang
 dikonsumsi antarmuka adalah persentil dan kategori
-(docs/rancangan/AMBA-kamus-variabel.md bagian 4).
+(docs/rancangan/LIMINA-kamus-variabel.md bagian 4).
 """
 
 from __future__ import annotations

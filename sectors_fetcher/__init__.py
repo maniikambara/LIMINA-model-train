@@ -1,9 +1,9 @@
-"""Sectors Financial API (v2) fetcher & AMBA Production Scoring Service."""
+"""Sectors Financial API (v2) fetcher & LIMINA Production Scoring Service."""
 
-from .service import AMBAScoringService, preprocess_single_ticker, classify_suspension_reason
+from .service import LiminaScoringService, preprocess_single_ticker, classify_suspension_reason
 
 __all__ = [
-    "AMBAScoringService",
+    "LiminaScoringService",
     "preprocess_single_ticker",
     "classify_suspension_reason",
 ]

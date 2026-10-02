@@ -3,13 +3,13 @@ tuning.py -- grid pencarian hyperparameter untuk Kandidat 1 dan 2
 ====================================================================
 
 Hanya pada data latih, tidak pernah menyentuh potret uji sampai
-evaluasi akhir (AMBA-struktur-model-dan-algoritma.md 9). Opsional:
+evaluasi akhir (LIMINA-struktur-model-dan-algoritma.md 9). Opsional:
 notebook 03 bisa memanggil ini alih-alih models.latih_kandidat_1/2
 langsung, tapi jalur default tetap konfigurasi tetap di models.py.
 
 TimeSeriesSplit (bukan KFold) supaya validasi internal ini juga tidak
 bocor. scoring='average_precision' (bukan 'accuracy'), sejalan dengan
-larangan pelaporan akurasi (AMBANG-peran-model-dan-evaluasi.md 4.3).
+larangan pelaporan akurasi (LIMINA-peran-model-dan-evaluasi.md 4.3).
 """
 
 from __future__ import annotations

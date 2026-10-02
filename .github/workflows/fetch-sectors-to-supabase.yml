@@ -1,27 +1,15 @@
 name: Fetch Sectors API -> Supabase
 
-# Jalur TULIS: mengambil data mentah dari Sectors API v2 (sectors_fetcher/
-# endpoints/) untuk seluruh DEFAULT_TICKERS, lalu menyimpannya ke enam
-# tabel Supabase lewat `python -m sectors_fetcher.main`
-# (sectors_fetcher/storage/, lihat catatan di bawah). Ini yang mengisi
-# tabel yang nantinya dibaca oleh kedua pipeline latih
-# (retrain-random-forest.yml dan retrain-limina-main.yml).
+# Jalur TULIS: mengambil data mentah dari Sectors API v2 lalu
+# menyimpannya ke Supabase lewat `python -m sectors_fetcher.main`. Ini
+# yang mengisi tabel yang dibaca kedua pipeline latih.
 #
-# CATATAN PENTING: sectors_fetcher/main.py mengimpor enam modul
-# storage/save_*.py (satu per tabel: save_quarterly_financials,
-# save_daily_transaction, save_free_float, save_full_universe_close,
-# save_suspensions, save_company_overview) selain SupabaseStorage.
-# Baru SupabaseStorage (jalur BACA, dipakai api/ lewat AMBAScoringService)
-# yang sudah dibuat di sectors_fetcher/storage/supabase_client.py -- keenam
-# save_*.py itu (jalur TULIS) BELUM ada, jadi job ini akan tetap GAGAL di
-# langkah "Jalankan fetch" sampai keenamnya ditambahkan. Job tetap
-# disiapkan di sini sesuai permintaan; jangan aktifkan jadwalnya sebelum
-# itu lengkap, supaya tidak gagal setiap hari secara diam-diam.
+# NONAKTIF: sectors_fetcher/main.py butuh 6 modul storage/save_*.py
+# (jalur TULIS per tabel) yang belum dibuat -- baru SupabaseStorage
+# (jalur BACA, dipakai api/) yang sudah ada. Jangan aktifkan jadwalnya
+# sebelum keenamnya lengkap.
 on:
   schedule:
-    # Nonaktif secara default -- baris cron di bawah dikomentari sampai
-    # sectors_fetcher/storage/ tersedia. Hapus tanda "#" untuk mengaktifkan.
-    # - cron: "0 14 * * *"   # 21:00 WIB, sebelum retrain-random-forest.yml (15:00 UTC)
     - cron: "0 0 31 2 *" # placeholder yang tidak pernah jalan (31 Feb tidak ada)
   workflow_dispatch: {}
 
@@ -62,7 +50,5 @@ jobs:
           done
           if [ "$missing" = "1" ]; then exit 1; fi
 
-      # Pastikan sql/schema.sql (dirujuk sectors_fetcher/main.py) sudah
-      # dijalankan di Supabase SQL Editor sebelum job ini pernah sukses.
       - name: Jalankan fetch Sectors API -> Supabase
         run: python -m sectors_fetcher.main

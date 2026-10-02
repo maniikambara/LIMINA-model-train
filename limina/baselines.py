@@ -3,13 +3,13 @@ baselines.py -- Tiga pembanding dasar
 ========================================
 
 Dibangun sebelum model apa pun -- tanpa pembanding, angka model tidak
-punya arti (AMBANG-peran-model-dan-evaluasi.md 4.5).
+punya arti (LIMINA-peran-model-dan-evaluasi.md 4.5).
 
   1. Acak            -- lantai dasar mutlak
   2. Aturan tunggal   -- menguji apakah satu indikator saja sudah cukup
   3. Rule-based       -- pembanding sebenarnya, sekaligus jalur cadangan
 
-Kandidat 3 dan 4 pada AMBA-struktur-model-dan-algoritma.md.
+Kandidat 3 dan 4 pada LIMINA-struktur-model-dan-algoritma.md.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import pandas as pd
 
 # Bobot rule-based, ditetapkan tim berdasarkan penilaian domain, mengikuti
 # kriteria Notasi Khusus BEI sebagai rujukan, bukan hasil pembelajaran dari
-# data (AMBA-struktur-model-dan-algoritma.md bagian 6.1-6.2). Didokumentasikan
+# data (LIMINA-struktur-model-dan-algoritma.md bagian 6.1-6.2). Didokumentasikan
 # terbuka di halaman metodologi produk.
 BOBOT_RULE_BASED = {
     "lapor_terlambat": 3,

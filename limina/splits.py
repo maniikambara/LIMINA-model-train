@@ -6,7 +6,7 @@ LIMINA dilatih ulang tiap hari/minggu, bukan submisi bertanggal potret
 tetap -- cutoff_latih dan tanggal_potret dihitung ulang tiap kali
 notebook 02 jalan, relatif ke hari itu (hitung_jendela_bergulir()).
 
-Aturan tetap (AMBANG-peran-model-dan-evaluasi.md 4.1): latih = seluruh
+Aturan tetap (LIMINA-peran-model-dan-evaluasi.md 4.1): latih = seluruh
 event sebelum cutoff_latih; uji = potret pada beberapa tanggal sebelum
 cutoff_label, dilihat sekali per siklus.
 

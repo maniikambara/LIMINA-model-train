@@ -1,6 +1,6 @@
 # Gabungan dependensi kedua pipeline.
 # - sectors_fetcher/ + preprocessing/notebook/ (produksi, feature-random-forest)
-# - limina/ + notebooks/ (arsip, LIMINA/AMBANG)
+# - limina/ + notebooks/ (arsip, LIMINA)
 # Untuk paket yang dipakai keduanya, versi minimum yang lebih tinggi dipakai.
 
 numpy>=1.26.0

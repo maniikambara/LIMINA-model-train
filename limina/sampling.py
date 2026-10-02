@@ -2,7 +2,7 @@
 sampling.py -- Pembentukan sampel pembanding
 ================================================
 
-Aturan (AMBANG-konsep-dan-rancangan.md 7.6): tiap sampel positif
+Aturan (LIMINA-konsep-dan-rancangan.md 7.6): tiap sampel positif
 dipasangkan 3 sampel negatif dari jendela waktu sama (kondisi pasar
 setara), papan pencatatan sebanding, dan tidak mengalami peristiwa
 kategori C dalam 180 hari setelah titik potongnya. Negatif TIDAK BOLEH

@@ -3,10 +3,10 @@ snapshot.py -- Evaluasi potret realistis
 ===========================================
 
 Menjalankan keempat kandidat pada satu potret uji, menghitung metrik
-yang dilaporkan (AMBA-struktur-model-dan-algoritma.md 8, langkah 8-9).
+yang dilaporkan (LIMINA-struktur-model-dan-algoritma.md 8, langkah 8-9).
 
 Potret uji HANYA boleh dilihat satu kali sampai gerbang keputusan
-(AMBANG-peran-model-dan-evaluasi.md 5.3). Modul ini tidak memaksakan itu
+(LIMINA-peran-model-dan-evaluasi.md 5.3). Modul ini tidak memaksakan itu
 secara teknis, hanya menyediakan fungsi untuk dipanggil pada saat yang
 tepat -- notebook 04 menjalankannya persis sekali per siklus latih.
 """
@@ -25,7 +25,7 @@ def _kecualikan_data_tidak_lengkap(skor: pd.Series, snapshot: pd.DataFrame) -> p
     benar-benar terhitung pada potret ini, supaya tidak pernah masuk
     top-K -- emiten yang fiturnya tak terhitung tidak boleh diberi
     peringkat "biasa saja" hanya karena nilai kosongnya diisi median
-    (AMBA-kamus-variabel.md 4). Baris ini TETAP ikut di y_true/recall
+    (LIMINA-kamus-variabel.md 4). Baris ini TETAP ikut di y_true/recall
     sebagai peristiwa yang tidak mungkin tertangkap, bukan dihapus,
     supaya Precision@20/Recall@90h jujur mencerminkan cakupan yang bisa
     dinilai pada potret ini.
@@ -138,8 +138,8 @@ def keputusan_anomali_saja(alasan: str) -> dict:
 
 def gerbang_keputusan(hasil_lintas_potret: pd.DataFrame) -> dict:
     """
-    Gerbang keputusan (AMBANG-peran-model-dan-evaluasi.md 7,
-    AMBA-struktur-model-dan-algoritma.md 2). Awalnya untuk tanggal tetap
+    Gerbang keputusan (LIMINA-peran-model-dan-evaluasi.md 7,
+    LIMINA-struktur-model-dan-algoritma.md 2). Awalnya untuk tanggal tetap
     (10 Sep 2026, hackathon); sekarang dijalankan ulang tiap siklus latih
     di notebook 04, jadi perannya jadi pemeriksaan kesehatan berkelanjutan.
 

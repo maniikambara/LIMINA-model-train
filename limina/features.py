@@ -3,7 +3,7 @@ features.py -- Perhitungan indikator
 =======================================
 
 Tiap fungsi menghitung SATU indikator turunan dari variabel mentah,
-rumus persis di AMBA-kamus-variabel.md bagian 3. Data mentah yang masuk
+rumus persis di LIMINA-kamus-variabel.md bagian 3. Data mentah yang masuk
 harus sudah dipotong di titik point-in-time yang benar (lihat pit.py) --
 modul ini tidak memotong tanggal sendiri.
 """

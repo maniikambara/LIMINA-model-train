@@ -1,27 +1,16 @@
-name: Retrain AMBA - Random Forest (produksi)
+name: Retrain LIMINA - Random Forest (produksi)
 
-# Pipeline PRODUKSI (feature-random-forest): jalur BACA penuh --
-# preprocessing/notebook/01_ambil_data.ipynb ->
-# eda_and_feature_engineering.ipynb -> modeling_and_evaluation.ipynb,
-# lalu meng-COMMIT BALIK output/ (dataset, scores.json, backtest.json,
-# model *.joblib) beserta ketiga notebook yang baru dieksekusi (sel
-# output -- metrik, plot -- ikut ter-commit), plus tetap mengunggahnya
-# sebagai artifact GitHub Actions untuk diagnosis cepat kalau ada
-# langkah yang gagal.
-#
-# `python -m sectors_fetcher.main` (fetch Sectors API -> Supabase) TIDAK
-# dijalankan di sini -- lihat workflow terpisah
-# "fetch-sectors-to-supabase.yml" untuk jalur TULIS itu. Job ini murni
-# membaca tabel Supabase yang sudah terisi.
+# Pipeline produksi: 01_ambil_data -> eda_and_feature_engineering ->
+# modeling_and_evaluation, lalu commit balik output/ + ketiga notebook.
+# Jalur TULIS (Sectors API -> Supabase) ada di fetch-sectors-to-supabase.yml,
+# bukan di sini -- job ini cuma baca tabel Supabase yang sudah terisi.
 on:
   schedule:
-    # Setiap hari jam 22:00 WIB (15:00 UTC). Ganti sesuai kebutuhan, mis.
-    # mingguan tiap Senin: "0 15 * * 1".
-    - cron: "0 15 * * *"
+    - cron: "0 15 * * *" # 22:00 WIB
   workflow_dispatch: {}
 
 concurrency:
-  group: retrain-ambang-limina-random-forest
+  group: retrain-random-forest
   cancel-in-progress: false
 
 permissions:
@@ -45,28 +34,18 @@ jobs:
       - name: Instal dependensi
         run: pip install -r requirements.txt
 
-      # Hanya SUPABASE_URL/SUPABASE_KEY -- ketiga notebook di bawah cuma
-      # membaca tabel yang sudah ada di Supabase (01_ambil_data.ipynb
-      # mengecek config.kredensial_lengkap(), yang hanya menguji dua
-      # variabel ini). SECTORS_API_KEY cuma dipakai kalau memanggil
-      # sectors_fetcher.main langsung, itu ada di
-      # fetch-sectors-to-supabase.yml, bukan di sini.
+      # Cuma SUPABASE_URL/KEY -- notebook di bawah tidak memanggil Sectors API.
       - name: Cek secrets tersedia
         run: |
           missing=0
           for v in SUPABASE_URL SUPABASE_KEY; do
             if [ -z "${!v}" ]; then
-              echo "::error::Secret $v belum diset (Settings -> Secrets and variables -> Actions)."
+              echo "::error::Secret $v belum diset."
               missing=1
             fi
           done
           if [ "$missing" = "1" ]; then exit 1; fi
 
-      # --ExecutePreprocessor.kernel_name=python3 WAJIB di sini: notebook
-      # eda_and_feature_engineering.ipynb dan modeling_and_evaluation.ipynb
-      # menyimpan kernelspec bernama "ambang" (venv lokal penulis), yang
-      # tidak ada di runner ini -- tanpa override ini nbconvert gagal dengan
-      # "kernel ambang not found", bukan error dari kode notebooknya sendiri.
       - name: Jalankan 01_ambil_data.ipynb
         run: |
           jupyter nbconvert --to notebook --execute --inplace \
@@ -88,11 +67,8 @@ jobs:
             --ExecutePreprocessor.timeout=1200 \
             preprocessing/notebook/modeling_and_evaluation.ipynb
 
-      # Commit HANYA kalau ketiga notebook di atas sukses (langkah ini
-      # tidak punya if: always(), beda dari langkah unggah artifact di
-      # bawah) -- supaya output/ yang ter-commit ke branch main selalu
-      # dari siklus retrain yang selesai penuh, bukan hasil setengah jalan.
-      - name: Commit output (model terlatih + dataset + skor)
+      # Commit hanya kalau ketiga notebook sukses (tidak pakai if: always()).
+      - name: Commit output (model + dataset + skor)
         run: |
           git config user.name "limina-bot"
           git config user.email "limina-bot@users.noreply.github.com"
@@ -103,18 +79,11 @@ jobs:
           git diff --staged --quiet || git commit -m "Perbarui model dan output pipeline produksi ($(date -u +%Y-%m-%d))"
           git push
 
-      # if: always() -- tetap unggah apa pun yang sempat dihasilkan
-      # (termasuk notebook dengan traceback error di sel terakhirnya)
-      # walaupun salah satu langkah di atas gagal, supaya gampang didiagnosis
-      # dari tab Actions tanpa perlu akses lokal ke runner. Ini pelengkap,
-      # bukan lagi jalur persistensi utama -- output/ dan ketiga notebook
-      # yang berhasil dieksekusi penuh sudah ter-commit ke branch main
-      # lewat langkah "Commit output" di atas.
-      - name: Unggah artefak (notebook hasil eksekusi + output/)
+      - name: Unggah artefak (untuk diagnosis kalau gagal)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ambang-limina-random-forest-run-${{ github.run_number }}
+          name: random-forest-run-${{ github.run_number }}
           retention-days: 30
           if-no-files-found: warn
           path: |

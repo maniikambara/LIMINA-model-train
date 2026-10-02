@@ -127,7 +127,7 @@ KOLOM_WAJIB_TABEL = {
         "total_liabilities", "total_assets", "operating_cash_flow",
     },
     "daily_transaction": {"symbol", "date", "close", "volume", "market_cap"},
-    # daily_full_universe_close, per docs/rancangan/AMBANG-panduan-api-sectors.md,
+    # daily_full_universe_close, per docs/rancangan/LIMINA-panduan-api-sectors.md,
     # HANYA menyediakan close -- volume/market_cap sering kosong di sini, jangan
     # diwajibkan (lihat catatan batasan limina/raw_ingest.py).
     "daily_full_universe_close": {"symbol", "date", "close"},

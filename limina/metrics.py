@@ -5,7 +5,7 @@ metrics.py -- Precision@k, recall, AUC, selisih waktu
 Akurasi TIDAK PERNAH dihitung sebagai metrik yang dilaporkan di sini.
 Boleh dihitung untuk rasa ingin tahu internal lewat fungsi terpisah yang
 ditandai jelas, tapi tidak ada satu fungsi pun bernama sesuatu yang bisa
-tertukar dengan metrik utama (docs/rancangan/AMBANG-peran-model-dan-evaluasi.md
+tertukar dengan metrik utama (docs/rancangan/LIMINA-peran-model-dan-evaluasi.md
 bagian 4.3).
 """
 
@@ -47,7 +47,7 @@ def recall_90h(y_true, skor, k: int = 20) -> float:
 def hitung_auc(y_true, skor) -> float:
     """
     Area di bawah kurva ROC. Dilaporkan sebagai pelengkap, bukan klaim
-    utama (docs/rancangan/AMBA-kamus-variabel.md bagian 5).
+    utama (docs/rancangan/LIMINA-kamus-variabel.md bagian 5).
     """
     y_true = np.asarray(y_true)
     if len(set(y_true.tolist())) < 2:
@@ -59,8 +59,8 @@ def akurasi_internal_saja(y_true, y_pred) -> float:
     """
     Dihitung untuk keperluan internal SAJA. Tidak pernah dilaporkan ke
     README, dashboard, maupun halaman metodologi
-    (docs/rancangan/AMBA-kamus-variabel.md bagian 5,
-    docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 13 poin 1).
+    (docs/rancangan/LIMINA-kamus-variabel.md bagian 5,
+    docs/rancangan/LIMINA-peran-model-dan-evaluasi.md bagian 13 poin 1).
     Nama fungsi sengaja panjang dan eksplisit supaya tidak sengaja dipakai
     di jalur pelaporan publik.
     """
@@ -72,7 +72,7 @@ def akurasi_internal_saja(y_true, y_pred) -> float:
 def kalibrasi_ambang(skor_latih: np.ndarray, jumlah_top: int = 20, total_cakupan: int | None = None) -> float:
     """
     Ambang skor pada data latih setara posisi top-K dari seluruh cakupan
-    (AMBANG-peran-model-dan-evaluasi.md 4.4 langkah 1). jumlah_top
+    (LIMINA-peran-model-dan-evaluasi.md 4.4 langkah 1). jumlah_top
     di-min-kan dengan n: kalau cakupan lebih kecil dari yang diminta,
     tanpa batas ini np.percentile menerima persentil negatif dan melempar
     ValueError, bukan ambang yang masuk akal.
@@ -92,7 +92,7 @@ def hitung_selisih_waktu(
     kolom_skor: str = "skor",
 ) -> dict:
     """
-    Implementasi langkah 2-5 AMBANG-peran-model-dan-evaluasi.md 4.4.
+    Implementasi langkah 2-5 LIMINA-peran-model-dan-evaluasi.md 4.4.
     riwayat_skor: panel satu emiten, terurut naik, sampai tanggal
     peristiwa. Tandai tanggal PERTAMA skor melewati ambang DAN bertahan
     dua titik berturut-turut (lonjakan sesaat tidak dihitung).
@@ -120,7 +120,7 @@ def hitung_selisih_waktu(
 def ringkas_selisih_waktu(daftar_hasil: list[dict]) -> dict:
     """Ringkas hitung_selisih_waktu (median/p25/p75 + kejadian terlewat).
     Median tidak dihitung dari kasus terlewat -- melaporkan rata-rata
-    tanpa jumlah terlewat itu menyesatkan (AMBANG-... 4.4)."""
+    tanpa jumlah terlewat itu menyesatkan (LIMINA-... 4.4)."""
     terdeteksi = [h["selisih_hari"] for h in daftar_hasil if h["terdeteksi"]]
     kejadian_terlewat = sum(1 for h in daftar_hasil if not h["terdeteksi"])
 

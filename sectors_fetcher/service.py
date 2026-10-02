@@ -2,13 +2,13 @@
 sectors_fetcher/service.py
 ==========================
 
-Layanan Produksi AMBA (Production Scoring & Preprocessing Service).
+Layanan Produksi LIMINA (Production Scoring & Preprocessing Service).
 
 Modul ini dirancang untuk dapat digunakan ulang (reusable) di lingkungan produksi,
 backend API (FastAPI/Flask/Next.js), atau batch worker terjadwal:
 1. Menghubungkan ke database Supabase untuk menarik data mentah terbaru.
 2. Melakukan preprocessing point-in-time bebas dari data leakage untuk data baru.
-3. Menghitung seluruh 11 indikator risiko turunan (Kamus Variabel AMBA Bagian 3).
+3. Menghitung seluruh 11 indikator risiko turunan (Kamus Variabel LIMINA Bagian 3).
 4. Menjalankan inferensi model ML terlatih (Random Forest / Logistic Regression).
 5. Menghasilkan output scoring resmi (skor, persentil, kategori, arah_30h, status,
    indikator_dominan, kontribusi) yang siap disimpan ke database atau scores.json.
@@ -31,7 +31,7 @@ from . import config
 
 logger = logging.getLogger("amba_service")
 
-# 11 Indikator Risiko Turunan Resmi (AMBA Kamus Variabel Bagian 3)
+# 11 Indikator Risiko Turunan Resmi (LIMINA Kamus Variabel Bagian 3)
 RISK_FEATURE_COLS = [
     "lapor_jarak_hari",
     "lapor_terlambat",
@@ -62,7 +62,7 @@ def normalize_symbol(symbol: str) -> str:
 
 
 def classify_suspension_reason(reason_text: str | None) -> str:
-    """Klasifikasi alasan suspensi BEI ke dalam Taksonomi AMBA (A, B, C)."""
+    """Klasifikasi alasan suspensi BEI ke dalam Taksonomi LIMINA (A, B, C)."""
     if not isinstance(reason_text, str) or not reason_text.strip():
         return "Unknown"
     r = reason_text.lower()
@@ -232,11 +232,11 @@ def preprocess_single_ticker(
     }
 
 
-class AMBAScoringService:
+class LiminaScoringService:
     """
     Service terintegrasi untuk menarik data baru dari database Supabase,
     menjalankan preprocessing, inferensi model machine learning, dan menghasilkan
-    output scoring sesuai Kamus Variabel AMBA Bagian 4.
+    output scoring sesuai Kamus Variabel LIMINA Bagian 4.
     """
 
     def __init__(
@@ -261,7 +261,7 @@ class AMBAScoringService:
             from .storage.supabase_client import SupabaseStorage as _Storage
         except ModuleNotFoundError as exc:
             raise RuntimeError(
-                "AMBAScoringService butuh koneksi Supabase tapi "
+                "LiminaScoringService butuh koneksi Supabase tapi "
                 "sectors_fetcher/storage/ tidak ada di checkout ini. "
                 "Sediakan instance storage sendiri lewat parameter `storage=`, "
                 "atau lengkapi paket storage/ terlebih dahulu."

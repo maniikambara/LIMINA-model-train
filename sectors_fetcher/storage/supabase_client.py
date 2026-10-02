@@ -2,9 +2,7 @@
 sectors_fetcher/storage/supabase_client.py
 ============================================
 
-Wrapper BACA-SAJA di atas supabase-py, dipakai `AMBAScoringService`
-(`sectors_fetcher/service.py`) dan tidak lain -- lihat catatan di
-`storage/__init__.py` soal jalur TULIS yang belum ada di sini.
+Wrapper BACA-SAJA di atas supabase-py, dipakai LiminaScoringService.
 """
 
 from __future__ import annotations
@@ -21,9 +19,6 @@ class SupabaseStorage:
         resolved_url = url or config.SUPABASE_URL
         resolved_key = key or config.SUPABASE_KEY
         if not resolved_url or not resolved_key:
-            # Pesan yang sama seperti config.require_supabase_credentials(),
-            # supaya error di sini konsisten dengan error di
-            # sectors_fetcher/main.py.
             raise RuntimeError(
                 "SUPABASE_URL/SUPABASE_KEY belum diset.\n"
                 'Jalankan:\n'

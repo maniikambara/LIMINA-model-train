@@ -1,16 +1,10 @@
 name: Perbarui model LIMINA (arsip notebooks/01-05)
 
-# NONAKTIF sementara -- hanya retrain-random-forest.yml yang jalan
-# otomatis untuk saat ini. Jadwal cron di bawah sengaja dilepas supaya
-# workflow ini TIDAK jalan sendiri; masih bisa dipicu manual lewat tab
-# Actions -> workflow ini -> "Run workflow" kalau perlu. Untuk
-# mengaktifkan lagi jadwal hariannya, kembalikan blok schedule:
+# NONAKTIF -- hanya retrain-random-forest.yml yang jalan otomatis untuk
+# saat ini. Bisa dipicu manual lewat tab Actions. Untuk mengaktifkan lagi
+# jadwal hariannya, tambahkan kembali:
 #   schedule:
 #     - cron: "0 22 * * *"
-#
-# Pipeline PRODUKSI ada di retrain-random-forest.yml
-# (sectors_fetcher/ + preprocessing/notebook/) -- lihat README bagian
-# "Dua pipeline" untuk status masing-masing.
 on:
   workflow_dispatch: {}
 
@@ -53,10 +47,8 @@ jobs:
         run: |
           git config user.name "limina-bot"
           git config user.email "limina-bot@users.noreply.github.com"
-          # -f perlu karena keempat berkas ini masuk .gitignore. Dicek satu
-          # per satu dulu -- backtest.json/ringkasan_evaluasi.md hanya ada
-          # kalau Kandidat 1 sudah berhasil dilatih (lihat notebook 04),
-          # jadi belum tentu ada tiap siklus.
+          # -f perlu karena keempat berkas ini masuk .gitignore; sebagian
+          # cuma ada kalau Kandidat 1 berhasil dilatih (lihat notebook 04).
           for berkas in artifacts/scores.json artifacts/backtest.json artifacts/ringkasan_evaluasi.md artifacts/riwayat_skor.csv; do
             [ -f "$berkas" ] && git add -f "$berkas"
           done

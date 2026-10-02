@@ -6,7 +6,7 @@ test_models.py
 - uji bahwa Kandidat 2 tidak memakai data terstandardisasi
 - uji bahwa kontribusi indikator menjumlah ke skor akhir dikurangi intercept
 
-(docs/rancangan/AMBA-struktur-model-dan-algoritma.md bagian 13)
+(docs/rancangan/LIMINA-struktur-model-dan-algoritma.md bagian 13)
 """
 
 import numpy as np

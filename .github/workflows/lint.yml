@@ -1,14 +1,9 @@
 name: Lint & Cek Sintaks
 
-# NONAKTIF sementara -- hanya retrain-random-forest.yml yang jalan
-# otomatis untuk saat ini. Trigger push/pull_request sengaja dilepas;
-# masih bisa dipicu manual lewat tab Actions -> workflow ini -> "Run
-# workflow". Untuk mengaktifkan lagi supaya jalan di tiap push/PR,
-# kembalikan dua trigger ini:
-#   push:
-#     branches: ["**"]
-#   pull_request:
-#     branches: ["**"]
+# NONAKTIF -- hanya retrain-random-forest.yml yang jalan otomatis. Bisa
+# dipicu manual. Untuk jalan di tiap push/PR lagi, tambahkan kembali:
+#   push: { branches: ["**"] }
+#   pull_request: { branches: ["**"] }
 on:
   workflow_dispatch: {}
 
@@ -63,12 +58,8 @@ jobs:
           sys.exit(1 if gagal else 0)
           PY
 
-      # sectors_fetcher/storage/supabase_client.py (jalur BACA, dipakai
-      # AMBAScoringService lewat api/) sudah ada dan diimpor di bawah.
-      # main.py TIDAK diimpor di sini -- dia butuh enam modul
-      # storage/save_*.py (jalur TULIS, dipanggil fetch-sectors-to-supabase.yml)
-      # yang masih belum dibuat (lihat storage/__init__.py). features/pipeline.py
-      # sama, belum diimpor karena belum ada di checkout ini.
+      # main.py tidak diimpor -- butuh storage/save_*.py (jalur TULIS)
+      # yang belum ada.
       - name: Import cepat sectors_fetcher (tanpa kredensial)
         run: |
           python -c "

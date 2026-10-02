@@ -74,7 +74,7 @@ KOLOM_ALASAN_SUSPENSI = "reason"
 # JENDELA_LABEL_HARI: satu sumber untuk horizon label -- labels.py dan
 # raw_ingest.OFFSET_AS_OF_DARI_EVENT_HARI membacanya, jangan hardcode
 # ulang di tempat lain (desinkron = label tersensor jadi salah). Rentang
-# wajar 30-90 hari (AMBANG-peran-model-dan-evaluasi.md bagian 2).
+# wajar 30-90 hari (LIMINA-peran-model-dan-evaluasi.md bagian 2).
 JENDELA_LABEL_HARI = 30
 JUMLAH_POTRET_EVALUASI = 6
 JARAK_POTRET_HARI = 30

@@ -3,7 +3,7 @@ models.py -- Regresi logistik dan gradient boosting
 ======================================================
 
 Definisi konfigurasi keempat kandidat
-(docs/rancangan/AMBA-struktur-model-dan-algoritma.md bagian 2-6, 13):
+(docs/rancangan/LIMINA-struktur-model-dan-algoritma.md bagian 2-6, 13):
 
   Kandidat 1  Regresi Logistik     model utama
   Kandidat 2  Gradient Boosting    pembanding non-linear
@@ -27,7 +27,7 @@ from .contracts import KOLOM_FITUR
 
 RANDOM_SEED = 42
 
-# Konfigurasi Kandidat 1 (AMBA-struktur-model-dan-algoritma.md bagian 3.3).
+# Konfigurasi Kandidat 1 (LIMINA-struktur-model-dan-algoritma.md bagian 3.3).
 # `penalty` sengaja TIDAK dicantumkan eksplisit: L2 adalah default
 # LogisticRegression di scikit-learn, dan mencantumkannya sebagai 'l2'
 # memicu FutureWarning sejak scikit-learn 1.8 (parameter ini dijadwalkan

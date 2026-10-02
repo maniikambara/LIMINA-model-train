@@ -4,7 +4,7 @@ contracts.py -- Skema dataset dan validator
 
 Kontrak kolom untuk panel.csv (satu baris per emiten x as_of_date) dan
 snapshot_<tanggal>.csv (skema sama, seluruh emiten satu tanggal). Lihat
-docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 3. Modul ini
+docs/rancangan/LIMINA-peran-model-dan-evaluasi.md bagian 3. Modul ini
 hanya mendefinisikan dan memvalidasi bentuk data, tidak mengambil data.
 """
 
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-# Kolom fitur (AMBA-kamus-variabel.md 3.1-3.3). Urutan tetap: index
+# Kolom fitur (LIMINA-kamus-variabel.md 3.1-3.3). Urutan tetap: index
 # koefisien model harus selalu bisa dipetakan balik ke nama indikator.
 KOLOM_FITUR = [
     "lapor_jarak_hari",

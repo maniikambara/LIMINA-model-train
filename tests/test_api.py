@@ -1,13 +1,4 @@
-"""
-tests/test_api.py
-===================
-
-Uji asap (smoke test) untuk api/main.py. TestClient FastAPI tidak
-memerlukan server sungguhan berjalan, tapi /health tetap memanggil
-get_scoring_service() -> AMBAScoringService(storage=SupabaseStorage()),
-jadi tes ini tetap butuh SUPABASE_URL/SUPABASE_KEY valid (lihat
-docs/PANDUAN-FASTAPI.md).
-"""
+"""Smoke test api/main.py. Butuh SUPABASE_URL/SUPABASE_KEY valid."""
 
 from fastapi.testclient import TestClient
 

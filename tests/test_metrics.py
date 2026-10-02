@@ -4,7 +4,7 @@ test_metrics.py -- Uji metrik dengan kasus yang jawabannya diketahui
 
 Metrik yang salah hitung akan menghasilkan angka yang terlihat wajar
 tetapi keliru, dan kesalahan seperti itu tidak akan pernah ketahuan tanpa
-pengujian (docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 9).
+pengujian (docs/rancangan/LIMINA-peran-model-dan-evaluasi.md bagian 9).
 """
 
 import numpy as np

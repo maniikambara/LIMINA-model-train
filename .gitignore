@@ -4,7 +4,7 @@ sectors_fetcher/.env
 */sql
 sql/
 
-# --- Pipeline notebooks/01-05 + limina/ (arsip LIMINA/AMBANG) ---
+# --- Pipeline notebooks/01-05 + limina/ (arsip LIMINA) ---
 # Data yang diunduh/dihasilkan ulang tiap siklus -- bukan kode sumber,
 # jangan ikut dikirim ke Git. Taksonomi di data/labels/ TETAP dikirim
 # (itu keputusan tim, bukan data mentah).

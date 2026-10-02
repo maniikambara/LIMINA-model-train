@@ -4,7 +4,7 @@ leakage.py -- Empat pemeriksaan kebocoran
 
 Kebocoran temporal adalah satu-satunya kesalahan yang membuat seluruh
 hasil tidak sah tanpa memunculkan pesan galat apa pun
-(docs/rancangan/AMBANG-peran-model-dan-evaluasi.md bagian 6).
+(docs/rancangan/LIMINA-peran-model-dan-evaluasi.md bagian 6).
 
 Refleks yang wajib ditanam: hasil yang terlalu bagus adalah gejala,
 bukan kabar baik.

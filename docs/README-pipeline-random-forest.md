@@ -1,6 +1,6 @@
-# AMBA: Early Warning System Risiko Suspensi Saham IDX
+# LIMINA: Early Warning System Risiko Suspensi Saham IDX
 
-AMBA menilai kemungkinan sebuah emiten IDX kena suspensi karena masalah
+LIMINA menilai kemungkinan sebuah emiten IDX kena suspensi karena masalah
 fundamental (bukan sekadar volatilitas harga) dalam 90 hari ke depan,
 memakai 11 indikator turunan dari laporan keuangan, transaksi harian, dan
 struktur kepemilikan. Dibangun untuk Sectors Hackathon 2026, Track 03
@@ -19,19 +19,19 @@ sectors_fetcher/          Pengambilan data dari Sectors API + logika bisnis
   supabase_io.py            Pembaca Supabase (baca saja) dipakai 01_ambil_data.ipynb
   endpoints/                Satu modul per endpoint API (fetch mentah saja)
   features/                 Perhitungan 11 indikator turunan (lihat catatan di bawah)
-  service.py                AMBAScoringService: preprocessing + inferensi + skor produksi
+  service.py                LiminaScoringService: preprocessing + inferensi + skor produksi
   main.py                   Entry point: fetch semua tabel -> simpan ke Supabase
 
 preprocessing/notebook/
   01_ambil_data.ipynb                 Unduh enam tabel mentah dari Supabase (baca saja) -> data/raw/
   eda_and_feature_engineering.ipynb   Audit data mentah, taksonomi suspensi,
-                                       feature engineering point-in-time -> output/dataset_modeling_ambang.csv
+                                       feature engineering point-in-time -> output/dataset_modeling_limina.csv
   modeling_and_evaluation.ipynb       Logistic Regression, Random Forest + tuning,
                                        evaluasi, ekspor scores.json/backtest.json
 
 docs/
-  AMBA-dokumentasi-variabel-dan-pemodelan.md   Definisi lengkap tiap variabel dan rumus
-  AMBANG-panduan-api-sectors.md                Referensi endpoint Sectors API v2
+  LIMINA-dokumentasi-variabel-dan-pemodelan.md   Definisi lengkap tiap variabel dan rumus
+  LIMINA-panduan-api-sectors.md                Referensi endpoint Sectors API v2
 ```
 
 ## Alur Data
@@ -48,7 +48,7 @@ Sectors API v2 --> sectors_fetcher (fetch) --> Supabase (simpan mentah)
                          (point-in-time feature engineering + label)
                                                      |
                                                      v
-                              output/dataset_modeling_ambang.csv
+                              output/dataset_modeling_limina.csv
                                                      |
                                                      v
                               modeling_and_evaluation.ipynb
@@ -64,7 +64,7 @@ paket `sectors_fetcher/storage/` yang belum ada di checkout ini -- lihat
 Keterbatasan). Notebook ini bisa dijalankan berkali-kali (pengambilan
 pertama maupun pembaruan harian) tanpa bergantung pada paket yang hilang
 itu, karena hanya melakukan `select()` ke enam tabel yang sudah ada di
-Supabase Anda, sama seperti proyek kakaknya (LIMINA/AMBANG) yang membaca
+Supabase Anda, sama seperti proyek kakaknya (LIMINA) yang membaca
 Supabase yang sama.
 
 Prinsip point-in-time (dipakai konsisten di `service.py` dan kedua
@@ -76,7 +76,7 @@ mengalami suspensi Kategori A (lonjakan harga), B (penurunan harga),
 **atau** C (kepatuhan/going concern) dalam jendela itu. Kolom `is_event_90d`
 (Kategori C saja) tetap ada di dataset sebagai alternatif yang lebih sempit,
 tapi tidak dipakai sebagai target saat ini. Definisi lengkap ada di
-`docs/AMBA-dokumentasi-variabel-dan-pemodelan.md` Bagian 5.
+`docs/LIMINA-dokumentasi-variabel-dan-pemodelan.md` Bagian 5.
 
 ## Menjalankan
 
@@ -168,7 +168,7 @@ bagian Keterbatasan soal `sectors_fetcher/storage/`.
 - **`sectors_fetcher/storage/` tidak ada di checkout ini.** Ini submodul
   yang menyimpan hasil fetch KE Supabase (`SupabaseStorage`, `save_*`
   per tabel) -- dirujuk oleh `main.py` dan `service.py`. `service.py`
-  sudah dibuat toleran (import ditunda, `AMBAScoringService` melempar
+  sudah dibuat toleran (import ditunda, `LiminaScoringService` melempar
   pesan jelas kalau storage tak tersedia dan tidak disuntikkan manual),
   jadi `import sectors_fetcher` dan fungsi murni (`classify_suspension_reason`,
   `preprocess_single_ticker`, seluruh `features/*.py`) tetap bisa dipakai.
@@ -195,7 +195,7 @@ bagian Keterbatasan soal `sectors_fetcher/storage/`.
   ini -- kelas target sangat timpang (kejadian suspensi kategori C
   jarang), jadi metrik yang dipakai adalah ROC-AUC, Precision, Recall,
   F1, dan `Precision@20`/`Recall@90h` (lihat
-  `AMBA-dokumentasi-variabel-dan-pemodelan.md` bagian 7). Satu nilai
+  `LIMINA-dokumentasi-variabel-dan-pemodelan.md` bagian 7). Satu nilai
   `akurasi_internal_only` tetap dicatat di `backtest.json` untuk
   referensi internal, secara eksplisit diberi label demikian supaya
   tidak disalahartikan sebagai metrik penilaian utama.

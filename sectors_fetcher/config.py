@@ -135,9 +135,7 @@ MAX_DAILY_RANGE_DAYS = 90
 DEFAULT_TICKERS = [
     "UDNG.JK",
     "PACK.JK", "MDIA.JK", "LUCY.JK", "MLPT.JK", "INET.JK", "MINA.JK",
-    # Emiten awal (jangan dihapus) -- dikembalikan aktif: ini yang bikin
-    # modeling_and_evaluation_old.ipynb punya sampel positif (lihat diagnosa),
-    # watchlist 7-simbol di atas saja nyaris tidak pernah kena suspensi.
+    # Emiten awal (jangan dihapus).
     "BBCA.JK", "TLKM.JK", "ASII.JK",
     # Top Market Gainers on IDX, 7 Days
     "AMMN.JK", "IMPC.JK", "AADI.JK", "MGLV.JK", "SOHO.JK",
