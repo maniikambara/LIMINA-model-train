@@ -27,7 +27,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from . import config
+from . import config, supabase_io
 
 logger = logging.getLogger("amba_service")
 
@@ -288,6 +288,13 @@ class LiminaScoringService:
         df_dt = pd.DataFrame(self.storage.select_all("daily_transaction"))
         df_ff = pd.DataFrame(self.storage.select_all("free_float_snapshot"))
         df_sus = pd.DataFrame(self.storage.select_all("stock_suspensions"))
+        if not df_sus.empty:
+            # Tabel mentah bisa memakai nama kolom tanggal/alasan berbeda
+            # (config.KOLOM_TANGGAL_SUSPENSI/KOLOM_ALASAN_SUSPENSI) --
+            # 01_ambil_data.ipynb sudah menyamakan ini lewat fungsi yang
+            # sama; service.py perlu memanggilnya sendiri karena jalur ini
+            # (API live) tidak lewat notebook itu.
+            df_sus = supabase_io.normalisasi_tabel_suspensi(df_sus)
         df_co = pd.DataFrame(self.storage.select_all("company_overview"))
         return df_qf, df_dt, df_ff, df_sus, df_co
 
