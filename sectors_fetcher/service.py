@@ -32,7 +32,7 @@ from . import config, supabase_io
 logger = logging.getLogger("amba_service")
 
 # 11 Indikator Risiko Turunan Resmi (LIMINA Kamus Variabel Bagian 3)
-RISK_FEATURE_COLS = [
+_INDIKATOR_RISIKO_11 = [
     "lapor_jarak_hari",
     "lapor_terlambat",
     "tanpa_pendapatan",
@@ -45,6 +45,15 @@ RISK_FEATURE_COLS = [
     "turun_dari_puncak_90d",
     "volatilitas_90d",
 ]
+
+# 3 rasio tambahan yang ikut dipakai saat training (lihat README: "14 fitur").
+_RASIO_TAMBAHAN_3 = ["earnings_margin", "fcf_margin", "ocf_to_debt"]
+
+# Seluruh fitur model (14). Urutan HARUS sama dengan saat fit; scikit-learn
+# memeriksa nama DAN urutan kolom lewat feature_names_in_. Daftar ini hanya
+# fallback -- saat inferensi, daftar sebenarnya dibaca dari model yang dimuat
+# (lihat LiminaScoringService._feature_cols).
+RISK_FEATURE_COLS = _INDIKATOR_RISIKO_11 + _RASIO_TAMBAHAN_3
 
 # Path default artefak model
 DEFAULT_MODEL_PATH = os.path.join(
@@ -145,6 +154,23 @@ def preprocess_single_ticker(
             else:
                 break
         ako_negatif_berturut = streak
+
+        # Rasio tambahan -- definisi identik dengan eda_and_feature_engineering.ipynb
+        # (sel 4.1) supaya tidak ada train/serve skew. None (bukan 0) kalau
+        # penyebut nol/tidak valid; SimpleImputer di dalam pipeline model yang
+        # mengisinya, persis seperti saat training.
+        def _num(kolom: str) -> float | None:
+            v = latest_qf.get(kolom)
+            return float(v) if pd.notna(v) else None
+
+        earnings = _num("earnings")
+        total_debt = _num("total_debt")
+        ocf = _num("operating_cash_flow")
+        fcf = _num("free_cash_flow")
+
+        earnings_margin = (earnings / rev) if (earnings is not None and rev not in (None, 0)) else None
+        fcf_margin = (fcf / rev) if (fcf is not None and rev not in (None, 0)) else None
+        ocf_to_debt = (ocf / total_debt) if (ocf is not None and total_debt not in (None, 0)) else None
     else:
         last_rep_date = None
         lapor_jarak_hari = None
@@ -153,6 +179,9 @@ def preprocess_single_ticker(
         ekuitas_negatif = None
         utang_terhadap_aset = None
         ako_negatif_berturut = None
+        earnings_margin = None
+        fcf_margin = None
+        ocf_to_debt = None
 
     # 3. Transaksi Harian (date <= as_of_date)
     dt = df_dt[(df_dt["symbol"] == sym) & (pd.to_datetime(df_dt["date"]) <= as_of_dt)] if (df_dt is not None and not df_dt.empty) else pd.DataFrame()
@@ -228,6 +257,10 @@ def preprocess_single_ticker(
         "hari_di_batas_bawah_90d": hari_di_batas_bawah_90d,
         "turun_dari_puncak_90d": turun_dari_puncak_90d,
         "volatilitas_90d": volatilitas_90d,
+        # 3 Rasio tambahan (fitur ke-12..14 model)
+        "earnings_margin": earnings_margin,
+        "fcf_margin": fcf_margin,
+        "ocf_to_debt": ocf_to_debt,
         "free_float_rendah": free_float_rendah,
     }
 
@@ -250,6 +283,7 @@ class LiminaScoringService:
         self.lr_model_path = lr_model_path
         self._rf_model: Any = None
         self._lr_pipeline: Any = None
+        self._feature_cols: list[str] = list(RISK_FEATURE_COLS)
 
     @staticmethod
     def _default_storage() -> SupabaseStorage:
@@ -275,6 +309,12 @@ class LiminaScoringService:
                 raise FileNotFoundError(f"Model file tidak ditemukan di {self.model_path}")
             self._rf_model = joblib.load(self.model_path)
             logger.info("Random Forest model loaded dari %s", self.model_path)
+            # Sumber kebenaran daftar fitur = model itu sendiri, bukan konstanta
+            # di sini. Dengan begitu retrain dengan fitur baru tidak lagi
+            # memecahkan /scores diam-diam.
+            nama_fit = getattr(self._rf_model, "feature_names_in_", None)
+            if nama_fit is not None:
+                self._feature_cols = [str(n) for n in nama_fit]
 
         if self._lr_pipeline is None:
             if os.path.exists(self.lr_model_path):
@@ -347,12 +387,19 @@ class LiminaScoringService:
         self._ensure_models_loaded()
         df_calc = df_features.copy().reset_index(drop=True)
 
-        X_input = df_calc[RISK_FEATURE_COLS].copy()
-        # Imputasi nilai kosong dengan median
-        for col in RISK_FEATURE_COLS:
-            if X_input[col].isnull().any():
-                med = X_input[col].median()
-                X_input[col] = X_input[col].fillna(med if pd.notna(med) else 0)
+        feature_cols = self._feature_cols
+        kolom_hilang = [c for c in feature_cols if c not in df_calc.columns]
+        if kolom_hilang:
+            raise ValueError(
+                f"Fitur yang dibutuhkan model tidak dihasilkan preprocessing: {kolom_hilang}. "
+                "Tambahkan perhitungannya di preprocess_single_ticker()."
+            )
+
+        # Kirim NaN apa adanya: SimpleImputer di dalam pipeline model sudah
+        # fit pada data training, jadi imputasinya konsisten dengan training
+        # (bukan median batch request, yang berubah-ubah tiap panggilan).
+        # Urutan kolom wajib sama dengan saat fit.
+        X_input = df_calc[feature_cols].apply(pd.to_numeric, errors="coerce").astype(float)
 
         # 1. Probabilitas Risiko (Skor mentah)
         probs = self._rf_model.predict_proba(X_input)[:, 1]
@@ -404,19 +451,29 @@ class LiminaScoringService:
 
         # 6. Kontribusi Fitur & Indikator Dominan
         if self._lr_pipeline is not None:
-            scaler = self._lr_pipeline.named_steps["scaler"]
-            clf = self._lr_pipeline.named_steps["clf"]
-            X_scaled = scaler.transform(X_input)
-            coefs = clf.coef_[0]
+            steps = self._lr_pipeline.named_steps
+            # Pipeline LR: imputer -> scaler -> clf. Imputer harus dijalankan
+            # dulu, kalau tidak NaN menjalar ke kontribusi.
+            X_arr = X_input.to_numpy()
+            if "imputer" in steps:
+                X_arr = steps["imputer"].transform(X_arr)
+            X_scaled = steps["scaler"].transform(X_arr)
+            coefs = steps["clf"].coef_[0]
             contribs = X_scaled * coefs
         else:
-            # Fallback jika model LR tidak ada: gunakan scaled importances
-            importances = self._rf_model.feature_importances_
-            contribs = X_input.values * importances
+            # Fallback jika model LR tidak ada: nilai terimputasi x importance.
+            # self._rf_model adalah Pipeline (imputer -> clf), jadi importance
+            # diambil dari step "clf", bukan dari Pipeline-nya.
+            steps = getattr(self._rf_model, "named_steps", {})
+            inti = steps.get("clf", self._rf_model)
+            X_arr = X_input.to_numpy()
+            if "imputer" in steps:
+                X_arr = steps["imputer"].transform(X_arr)
+            contribs = X_arr * inti.feature_importances_
 
         scores_payload = []
         for i, row in df_calc.iterrows():
-            row_contrib = dict(zip(RISK_FEATURE_COLS, np.round(contribs[i], 4)))
+            row_contrib = dict(zip(feature_cols, np.round(contribs[i], 4)))
             pos_contrib = {k: v for k, v in row_contrib.items() if v > 0}
             dominant = max(pos_contrib, key=pos_contrib.get) if pos_contrib else max(row_contrib, key=row_contrib.get)
 
