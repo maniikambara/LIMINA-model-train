@@ -56,12 +56,65 @@ _RASIO_TAMBAHAN_3 = ["earnings_margin", "fcf_margin", "ocf_to_debt"]
 RISK_FEATURE_COLS = _INDIKATOR_RISIKO_11 + _RASIO_TAMBAHAN_3
 
 # Path default artefak model
-DEFAULT_MODEL_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "output", "model_random_forest.joblib"
-)
-DEFAULT_LR_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "output", "model_lr_balanced.joblib"
-)
+OUTPUT_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "output"))
+DEFAULT_MODEL_PATH = os.path.join(OUTPUT_DIR, "model_random_forest.joblib")  # fallback lama
+DEFAULT_LR_PATH = os.path.join(OUTPUT_DIR, "model_lr_balanced.joblib")
+BACKTEST_PATH = os.path.join(OUTPUT_DIR, "backtest.json")
+PRODUCTION_MODEL_PATH = os.path.join(OUTPUT_DIR, "model_produksi.joblib")
+
+# Nama di backtest.json["model_selected"] (= `best_model_name` di
+# modeling_and_evaluation.ipynb) -> berkas artefak yang disimpan notebook itu.
+MODEL_FILE_BY_NAME = {
+    "baseline logistic regression": "model_baseline_lr.joblib",
+    "logistic regression (balanced)": "model_lr_balanced.joblib",
+    "random forest (balanced bootstrap)": "model_random_forest.joblib",
+    "blend lr+rf": "model_blend.joblib",
+}
+
+
+def resolve_model_path(
+    output_dir: str = OUTPUT_DIR,
+) -> tuple[str, str | None]:
+    """
+    Tentukan model produksi. Mengembalikan (path, nama_model_terpilih).
+
+    Urutan prioritas:
+      1. env LIMINA_MODEL_PATH (override manual, mis. untuk uji/rollback);
+      2. `model_selected` di output/backtest.json -> berkas modelnya;
+      3. output/model_produksi.joblib (disimpan notebook = model_terpilih);
+      4. output/model_random_forest.joblib (perilaku lama).
+    """
+    override = os.environ.get("LIMINA_MODEL_PATH")
+    if override:
+        return os.path.normpath(override), None
+
+    selected: str | None = None
+    backtest_file = os.path.join(output_dir, "backtest.json")
+    try:
+        with open(backtest_file, encoding="utf-8") as f:
+            selected = json.load(f).get("model_selected")
+    except (OSError, ValueError) as exc:
+        logger.warning("backtest.json tidak bisa dibaca (%s); pakai model_produksi.joblib", exc)
+
+    if isinstance(selected, str):
+        fname = MODEL_FILE_BY_NAME.get(selected.strip().casefold())
+        if fname is None:
+            logger.warning(
+                "model_selected=%r tidak dikenal di MODEL_FILE_BY_NAME; pakai model_produksi.joblib",
+                selected,
+            )
+        else:
+            candidate = os.path.join(output_dir, fname)
+            if os.path.exists(candidate):
+                return candidate, selected
+            logger.warning("Berkas %s untuk model_selected=%r tidak ada", candidate, selected)
+
+    for fallback in ("model_produksi.joblib", "model_random_forest.joblib"):
+        candidate = os.path.join(output_dir, fallback)
+        if os.path.exists(candidate):
+            return candidate, selected
+    # Tidak ada satu pun: kembalikan path utama supaya FileNotFoundError (-> 503) jelas.
+    return os.path.join(output_dir, "model_produksi.joblib"), selected
 
 
 def normalize_symbol(symbol: str) -> str:
@@ -275,13 +328,17 @@ class LiminaScoringService:
     def __init__(
         self,
         storage: SupabaseStorage | None = None,
-        model_path: str = DEFAULT_MODEL_PATH,
+        model_path: str | None = None,
         lr_model_path: str = DEFAULT_LR_PATH,
     ):
         self.storage = storage or self._default_storage()
-        self.model_path = model_path
+        # model_path=None -> pilih otomatis dari output/backtest.json.
+        if model_path is None:
+            self.model_path, self.model_selected = resolve_model_path()
+        else:
+            self.model_path, self.model_selected = os.path.normpath(model_path), None
         self.lr_model_path = lr_model_path
-        self._rf_model: Any = None
+        self._model: Any = None
         self._lr_pipeline: Any = None
         self._feature_cols: list[str] = list(RISK_FEATURE_COLS)
 
@@ -302,24 +359,55 @@ class LiminaScoringService:
             ) from exc
         return _Storage()
 
+    @staticmethod
+    def _members(model: Any) -> list[Any]:
+        """Anggota ensemble (BlendedClassifier.fitted_), atau [] kalau model tunggal."""
+        return [est for _, est in getattr(model, "fitted_", [])]
+
+    @classmethod
+    def _model_feature_names(cls, model: Any) -> list[str] | None:
+        """Nama fitur saat fit. BlendedClassifier tidak punya feature_names_in_
+        sendiri -- ambil dari anggota pertamanya."""
+        for kandidat in [model, *cls._members(model)]:
+            nama = getattr(kandidat, "feature_names_in_", None)
+            if nama is not None:
+                return [str(n) for n in nama]
+        return None
+
     def _ensure_models_loaded(self) -> None:
         """Lazy load model ML."""
-        if self._rf_model is None:
+        if self._model is None:
             if not os.path.exists(self.model_path):
                 raise FileNotFoundError(f"Model file tidak ditemukan di {self.model_path}")
-            self._rf_model = joblib.load(self.model_path)
-            logger.info("Random Forest model loaded dari %s", self.model_path)
+            self._model = joblib.load(self.model_path)
+            logger.info(
+                "Model %s (%s) loaded dari %s",
+                self.model_selected or "tanpa-nama",
+                type(self._model).__name__,
+                self.model_path,
+            )
             # Sumber kebenaran daftar fitur = model itu sendiri, bukan konstanta
             # di sini. Dengan begitu retrain dengan fitur baru tidak lagi
             # memecahkan /scores diam-diam.
-            nama_fit = getattr(self._rf_model, "feature_names_in_", None)
+            nama_fit = self._model_feature_names(self._model)
             if nama_fit is not None:
-                self._feature_cols = [str(n) for n in nama_fit]
+                self._feature_cols = nama_fit
 
         if self._lr_pipeline is None:
             if os.path.exists(self.lr_model_path):
                 self._lr_pipeline = joblib.load(self.lr_model_path)
                 logger.info("Logistic Regression pipeline loaded dari %s", self.lr_model_path)
+            else:
+                # Tanpa berkas LR terpisah, pakai LR tertuning yang sudah ada di
+                # dalam blend (nama "lr_balanced") sebagai proksi penjelas.
+                for nama, est in getattr(self._model, "fitted_", []):
+                    if nama == "lr_balanced":
+                        self._lr_pipeline = est
+                        break
+
+    @property
+    def model_loaded(self) -> bool:
+        return self._model is not None
 
     def load_all_raw_data(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """Tarik semua tabel mentah dari Supabase."""
@@ -402,7 +490,7 @@ class LiminaScoringService:
         X_input = df_calc[feature_cols].apply(pd.to_numeric, errors="coerce").astype(float)
 
         # 1. Probabilitas Risiko (Skor mentah)
-        probs = self._rf_model.predict_proba(X_input)[:, 1]
+        probs = self._model.predict_proba(X_input)[:, 1]
         df_calc["skor"] = np.round(probs, 4)
 
         # 2. Persentil (0 - 100)
@@ -454,22 +542,28 @@ class LiminaScoringService:
             steps = self._lr_pipeline.named_steps
             # Pipeline LR: imputer -> scaler -> clf. Imputer harus dijalankan
             # dulu, kalau tidak NaN menjalar ke kontribusi.
-            X_arr = X_input.to_numpy()
-            if "imputer" in steps:
-                X_arr = steps["imputer"].transform(X_arr)
-            X_scaled = steps["scaler"].transform(X_arr)
+            # Imputer di-fit dengan nama kolom -> beri DataFrame. Scaler di-fit
+            # tanpa nama kolom -> beri ndarray. Kalau tertukar, sklearn
+            # mengeluarkan UserWarning "X does not have valid feature names".
+            X_imp = steps["imputer"].transform(X_input) if "imputer" in steps else X_input
+            X_scaled = steps["scaler"].transform(np.asarray(X_imp))
             coefs = steps["clf"].coef_[0]
             contribs = X_scaled * coefs
         else:
-            # Fallback jika model LR tidak ada: nilai terimputasi x importance.
-            # self._rf_model adalah Pipeline (imputer -> clf), jadi importance
-            # diambil dari step "clf", bukan dari Pipeline-nya.
-            steps = getattr(self._rf_model, "named_steps", {})
-            inti = steps.get("clf", self._rf_model)
-            X_arr = X_input.to_numpy()
-            if "imputer" in steps:
-                X_arr = steps["imputer"].transform(X_arr)
-            contribs = X_arr * inti.feature_importances_
+            # Fallback jika tidak ada LR sama sekali: nilai terimputasi x importance.
+            # Model bisa Pipeline (imputer -> clf), BlendedClassifier, atau
+            # estimator polos -- ambil imputer & importance dari yang tersedia.
+            steps = getattr(self._model, "named_steps", {})
+            anggota = self._members(self._model)
+            sumber = anggota[0] if (not steps and anggota) else self._model
+            steps_imp = getattr(sumber, "named_steps", {})
+            X_imp = steps_imp["imputer"].transform(X_input) if "imputer" in steps_imp else X_input.fillna(0)
+            inti = steps.get("clf", self._model)
+            if hasattr(inti, "feature_importances_"):
+                bobot = inti.feature_importances_
+            else:  # mis. model linear: pakai koefisien
+                bobot = inti.coef_[0]
+            contribs = np.asarray(X_imp) * bobot
 
         scores_payload = []
         for i, row in df_calc.iterrows():

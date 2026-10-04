@@ -22,4 +22,7 @@ class SkorEmiten(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     model_path: str
+    # model_selected di output/backtest.json (mis. "Blend LR+RF"); None kalau
+    # model di-override lewat LIMINA_MODEL_PATH atau backtest.json tidak ada.
+    model_selected: str | None = None
     model_loaded: bool

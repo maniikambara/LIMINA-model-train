@@ -9,9 +9,11 @@ Swagger UI di http://localhost:8000/docs. Lihat docs/PANDUAN-FASTAPI.md.
 """
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
 from api.dependencies import get_scoring_service
 from api.routers import scores
+from api.schemas import HealthResponse
 
 app = FastAPI(
     title="LIMINA Scoring API",
@@ -27,11 +29,18 @@ app.include_router(scores.router)
 #                    allow_methods=["GET"], allow_headers=["*"])
 
 
-@app.get("/health")
+@app.get("/", include_in_schema=False)
+def root():
+    """Health-check/browser yang membuka '/' diarahkan ke Swagger, bukan 404."""
+    return RedirectResponse(url="/docs")
+
+
+@app.get("/health", response_model=HealthResponse)
 def health():
     service = get_scoring_service()
     return {
         "status": "ok",
         "model_path": service.model_path,
-        "model_loaded": service._rf_model is not None,
+        "model_selected": service.model_selected,
+        "model_loaded": service.model_loaded,
     }

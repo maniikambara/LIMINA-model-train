@@ -52,6 +52,15 @@ sudah cukup untuk `api/`. Kalau ukuran repo jadi masalah: Git LFS untuk
 `output/*.joblib`/`*.parquet`, atau unggah ke Supabase Storage dan unduh
 saat `api/dependencies.py` start (lalu `output/` bisa di-gitignore lagi).
 
+**Model mana yang dipakai?** `LiminaScoringService` membaca
+`output/backtest.json["model_selected"]` (hasil seleksi notebook
+`modeling_and_evaluation`) dan memuat berkasnya, mis. `Blend LR+RF` ->
+`output/model_blend.joblib`. Kalau nama tidak dikenal/berkas tidak ada, jatuh ke
+`model_produksi.joblib`, lalu `model_random_forest.joblib`. Jadi tiap retrain yang
+memilih model lain otomatis ikut tanpa mengubah kode. `GET /health` menampilkan
+`model_selected` dan `model_path` yang aktif. Untuk memaksa berkas tertentu
+(uji/rollback), set env `LIMINA_MODEL_PATH`.
+
 Kalau model belum pernah di-generate, `/scores` balas HTTP 503 (bukan
 crash 500 mentah) -- lihat `api/routers/scores.py`.
 
