@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-18T17:48:00.373613",
+  "generated_at": "2026-10-19T20:27:36.193664",
   "model_selected": "Blend LR+RF",
   "metrics": {
     "auc": 0.9213,
